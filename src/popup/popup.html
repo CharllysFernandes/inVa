@@ -9,8 +9,30 @@
   <body>
     <main>
       <h1>inVa</h1>
-      <p>Clique para destacar ou remover destaques da página.</p>
-      <button id="toggleHighlight" type="button">Alternar destaque</button>
+      <section>
+        <p>Clique para destacar ou remover destaques da página.</p>
+        <button id="toggleHighlight" type="button">Alternar destaque</button>
+      </section>
+
+      <hr />
+
+      <section>
+        <label for="createTicketUrl">URL de criação de chamado</label>
+        <input id="createTicketUrl" type="url" placeholder="https://exemplo.com/criar-chamado" style="width: 100%; box-sizing: border-box;"/>
+        <button id="saveCreateTicketUrl" type="button">Salvar URL</button>
+        <p id="saveStatus" aria-live="polite" style="font-size: 12px; color: #4caf50; display:none;">Salvo!</p>
+      </section>
+
+      <hr />
+
+      <section>
+        <label><input id="debugEnabled" type="checkbox" /> Modo debug</label>
+        <div style="margin-top: 8px;">
+          <button id="viewLogs" type="button">Ver logs</button>
+          <button id="clearLogs" type="button">Limpar logs</button>
+        </div>
+        <pre id="logsOutput" style="white-space: pre-wrap; max-height: 240px; overflow: auto; background: #f6f8fa; padding: 8px; display:none;"></pre>
+      </section>
     </main>
     <script type="module" src="popup.js"></script>
   </body>

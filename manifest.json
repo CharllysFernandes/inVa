@@ -3,9 +3,21 @@
     "name": "inVa",
     "description": "Extensão básica em TypeScript para destacar conteúdo em páginas da web.",
     "version": "0.1.0",
+    "icons": {
+        "16": "Logo.png",
+        "32": "Logo.png",
+        "48": "Logo.png",
+        "128": "Logo.png"
+    },
     "action": {
         "default_title": "inVa",
-        "default_popup": "popup.html"
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "Logo.png",
+            "32": "Logo.png",
+            "48": "Logo.png",
+            "128": "Logo.png"
+        }
     },
     "background": {
         "service_worker": "background.js"
@@ -27,7 +39,8 @@
             "js": [
                 "contentScript.js"
             ],
-            "run_at": "document_idle"
+            "run_at": "document_idle",
+            "all_frames": true
         }
     ]
 }

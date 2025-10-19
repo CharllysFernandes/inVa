@@ -39,7 +39,8 @@ module.exports = {
         { from: "src/popup/popup.html", to: "popup.html" },
         { from: "src/popup/popup.css", to: "popup.css" },
         { from: "src/options/options.html", to: "options.html" },
-        { from: "src/options/options.css", to: "options.css" }
+        { from: "src/options/options.css", to: "options.css" },
+        { from: "src/shared/Logo.png", to: "Logo.png" }
       ]
     })
   ]
