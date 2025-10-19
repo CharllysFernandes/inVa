@@ -1,3 +1,63 @@
+// Preenche CKEditor em iframe com o texto salvo em comments (robusto)
+function insertTextInCkeditorIframe(text: string) {
+  const tryInsert = (iframe: HTMLIFrameElement) => {
+    if (!iframe.contentDocument) return false;
+    const body = iframe.contentDocument.body;
+    if (!body) return false;
+    let p = body.querySelector('p');
+    if (!p) {
+      p = iframe.contentDocument.createElement('p');
+      body.appendChild(p);
+    }
+    p.innerText = text;
+    return true;
+  };
+
+  const insertWhenReady = (iframe: HTMLIFrameElement) => {
+    if (tryInsert(iframe)) return;
+    let attempts = 0;
+    const maxAttempts = 30; // ~9 segundos
+    const interval = setInterval(() => {
+      attempts++;
+      if (tryInsert(iframe) || attempts >= maxAttempts) {
+        clearInterval(interval);
+      }
+    }, 300);
+  };
+
+  const observeIframe = () => {
+    const iframe = document.querySelector<HTMLIFrameElement>('.cke_wysiwyg_frame');
+    if (iframe) {
+      if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+        insertWhenReady(iframe);
+      } else {
+        iframe.addEventListener('load', () => insertWhenReady(iframe), { once: true });
+      }
+      return true;
+    }
+    return false;
+  };
+
+  if (!observeIframe()) {
+    const observer = new MutationObserver(() => {
+      if (observeIframe()) {
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(() => observer.disconnect(), 10000);
+  }
+}
+// Preenche CKEditor com o texto salvo em comments
+function setCkeditorDescription(text: string) {
+  const editable = document.querySelector<HTMLElement>('.cke_editable');
+  if (editable) {
+    const p = editable.querySelector('p');
+    if (p) {
+      p.innerText = text;
+    }
+  }
+}
 /// <reference types="chrome" />
 
 import { TOGGLE_HIGHLIGHT, type Message } from "../shared/types";
@@ -77,6 +137,60 @@ chrome.runtime.onMessage.addListener((message: Message) => {
       wrapper.innerHTML = ELEMENTO_HTML;
       container.insertBefore(wrapper, container.firstChild);
       void logger.info("content", "Injected elemento.html into category_step1");
+
+      // Persistência do conteúdo do textarea #comments em chrome.storage.local
+      const textarea = wrapper.querySelector<HTMLTextAreaElement>("#comments");
+      if (textarea) {
+        const storageKey = `inva_comments:${savedUrl}`;
+
+        // Carrega valor salvo
+        try {
+          const saved = await new Promise<string>((resolve) => {
+            chrome.storage.local.get({ [storageKey]: "" }, (items) => resolve(String(items[storageKey] ?? "")));
+          });
+          if (saved) {
+            textarea.value = saved;
+            void logger.info("content", "Loaded saved comment into textarea", { key: storageKey, value: saved });
+            // Também preenche o CKEditor, se existir
+            setCkeditorDescription(saved);
+            // E também preenche o CKEditor em iframe, se existir
+            insertTextInCkeditorIframe(saved);
+          }
+        } catch (e) {
+          void logger.warn("content", "Failed to load saved comment", { error: String(e) });
+        }
+
+        // Debounce helper
+        const debounce = <T extends (...args: unknown[]) => void>(fn: T, wait = 400) => {
+          let t: number | undefined;
+          return (...args: Parameters<T>) => {
+            if (t) window.clearTimeout(t);
+            t = window.setTimeout(() => fn(...args), wait);
+          };
+        };
+
+        const saveNow = async (reason: string) => {
+          try {
+            const value = textarea.value;
+            await new Promise<void>((resolve, reject) => {
+              chrome.storage.local.set({ [storageKey]: value }, () => {
+                const err = chrome.runtime.lastError;
+                if (err) reject(err);
+                else resolve();
+              });
+            });
+            void logger.info("content", "Saved comment text", { key: storageKey, value, reason });
+          } catch (e) {
+            void logger.error("content", "Failed to save comment text", { error: String(e) });
+          }
+        };
+
+        const saveDebounced = debounce(() => void saveNow("input"), 600);
+        textarea.addEventListener("input", saveDebounced);
+        textarea.addEventListener("blur", () => { void saveNow("blur"); });
+      } else {
+        void logger.warn("content", "Textarea #comments not found inside injected wrapper");
+      }
       return true;
     };
 
