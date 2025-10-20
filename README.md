@@ -1,6 +1,21 @@
 # inVa
 
-Projeto inicial de uma extensão para Google Chrome e Microsoft Edge escrita em TypeScript. O foco atual é facilitar o registro de chamados, sincronizando o campo de "comentários" salvo localmente com o editor enriquecido da página e oferecendo utilitários de depuração e configuração de URL.
+Extensão para Google Chrome e Microsoft Edge escrita em TypeScript cujo objetivo é agilizar o fluxo de criação de chamados na plataforma **InvGate Service Desk**. Ela injeta um painel assistente dentro da página de criação de incidentes, permite salvar temporariamente rascunhos de comentários, sincroniza esse texto com o CKEditor utilizado pela aplicação e remove o conteúdo do armazenamento assim que o envio ocorre – mantendo o campo pronto para o próximo atendimento. O popup da extensão também oferece um painel de diagnóstico para habilitar logs detalhados e configurar a URL de criação de tickets utilizada como gatilho para o conteúdo.
+
+## Aviso legal
+
+- **InvGate** é uma marca e plataforma pertencente aos seus respectivos proprietários.
+- Este projeto não é afiliado, mantido, patrocinado ou endossado pela InvGate.
+- A extensão foi desenvolvida de forma independente, com fins de prototipagem e aumento de produtividade, e não altera o código-fonte original da aplicação InvGate.
+- Ao utilizá-la, verifique as políticas internas da sua organização e os termos de uso da plataforma para assegurar conformidade jurídica e contratual.
+
+## Principais funcionalidades
+
+- Armazena rascunhos de comentários localmente enquanto o usuário prepara o chamado.
+- Replica automaticamente o texto salvo para o CKEditor da página InvGate, evitando retrabalho.
+- Limpa o rascunho do `localStorage` após o envio do formulário, mantendo o campo disponível para novas anotações.
+- Disponibiliza no popup um painel com logo, status de versão, configuração da URL monitorada e ferramentas de debug (visualização/limpeza de logs, alternância de modo debug).
+- Construída inteiramente em TypeScript, utilizando ferramentas modernas (webpack, manifest V3) para facilitar evolução e manutenção.
 
 ## Pré-requisitos
 
