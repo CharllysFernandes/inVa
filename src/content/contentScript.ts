@@ -17,10 +17,29 @@ let iframeAppearanceObserver: MutationObserver | null = null;
 let iframeStabilityInterval: number | null = null;
 let inlineMutationObserver: MutationObserver | null = null;
 let inlineAppearanceObserver: MutationObserver | null = null;
+let editorEnforcementActive = false;
+let isProgrammaticEditorSync = false;
 const wiredSubmitElements = new WeakSet<Element>();
 const wiredSubmitForms = new WeakSet<HTMLFormElement>();
 const SUBMIT_BUTTON_SELECTOR = "#submit_button.button-blue";
-type ClearReason = "button-click" | "form-submit" | "manual-clear";
+type StorageClearReason = "button-click" | "form-submit" | "manual-clear" | "after-load";
+const storageRemovalReasons = new Map<string, StorageClearReason>();
+const normalizedIsEmpty = (value: string): boolean => normalizeContent(value).replace(/\u00a0/g, "").trim().length === 0;
+
+const iframeHasFocus = (iframe: HTMLIFrameElement): boolean => {
+  const doc = iframe.contentDocument;
+  const body = doc?.body;
+  if (!doc || !body) {
+    return false;
+  }
+  const active = doc.activeElement;
+  return Boolean(active && body.contains(active));
+};
+
+const inlineEditorHasFocus = (editable: HTMLElement): boolean => {
+  const active = document.activeElement;
+  return Boolean(active && (active === editable || editable.contains(active)));
+};
 
 /**
  * Aplica o último texto sincronizado dentro do iframe do CKEditor.
@@ -48,7 +67,12 @@ const applyTextToIframe = (iframe: HTMLIFrameElement): boolean => {
     body.appendChild(paragraph);
   }
 
-  paragraph.textContent = text;
+  isProgrammaticEditorSync = true;
+  try {
+    paragraph.textContent = text;
+  } finally {
+    isProgrammaticEditorSync = false;
+  }
   return normalizeContent(body.textContent ?? "") === target;
 };
 
@@ -68,10 +92,18 @@ const startIframeWatchers = (iframe: HTMLIFrameElement) => {
     const text = lastSyncedRichText;
     const current = normalizeContent(body.textContent ?? "");
     const target = normalizeContent(text);
-    if (current !== target) {
-      void logger.debug("content", "Reapplying text after iframe mutation", { targetLength: text.length });
-      applyTextToIframe(iframe);
+
+    if (!editorEnforcementActive) {
+      return;
     }
+
+    const shouldReapply = target.length > 0 && normalizedIsEmpty(current) && !iframeHasFocus(iframe);
+    if (!shouldReapply) {
+      return;
+    }
+
+    void logger.debug("content", "Reapplying text after iframe mutation", { targetLength: text.length });
+    applyTextToIframe(iframe);
   });
   iframeMutationObserver.observe(body, { childList: true, subtree: true, characterData: true });
 
@@ -85,7 +117,7 @@ const startIframeWatchers = (iframe: HTMLIFrameElement) => {
   iframeStabilityInterval = window.setInterval(() => {
     attempts += 1;
 
-    const applied = applyTextToIframe(iframe);
+  const applied = editorEnforcementActive ? applyTextToIframe(iframe) : true;
     if (applied) {
       stableMatches += 1;
     } else {
@@ -163,7 +195,12 @@ const applyTextToInlineEditor = (editable: HTMLElement) => {
     editable.appendChild(paragraph);
   }
 
-  paragraph.textContent = text;
+  isProgrammaticEditorSync = true;
+  try {
+    paragraph.textContent = text;
+  } finally {
+    isProgrammaticEditorSync = false;
+  }
 };
 
 /**
@@ -176,10 +213,17 @@ const startInlineWatchers = (editable: HTMLElement) => {
     const text = lastSyncedRichText;
     const target = normalizeContent(text);
     const current = normalizeContent(editable.textContent ?? "");
-    if (current !== target) {
-      void logger.debug("content", "Reapplying text after inline editor mutation", { targetLength: text.length });
-      applyTextToInlineEditor(editable);
+    if (!editorEnforcementActive) {
+      return;
     }
+
+    const shouldReapply = target.length > 0 && normalizedIsEmpty(current) && !inlineEditorHasFocus(editable);
+    if (!shouldReapply) {
+      return;
+    }
+
+    void logger.debug("content", "Reapplying text after inline editor mutation", { targetLength: text.length });
+    applyTextToInlineEditor(editable);
   });
   inlineMutationObserver.observe(editable, { childList: true, subtree: true, characterData: true });
 };
@@ -230,15 +274,29 @@ function setCkeditorDescription(_text: string) {
 const syncRichTextEditors = (text: string) => {
   void logger.debug("content", "Syncing CKEditor content", { length: text.length });
   lastSyncedRichText = text;
+  editorEnforcementActive = !normalizedIsEmpty(text);
   setCkeditorDescription(text);
   insertTextInCkeditorIframe(text);
+};
+
+const removeCommentFromStorage = (storageKey: string, reason: StorageClearReason) => {
+  storageRemovalReasons.set(storageKey, reason);
+  chrome.storage.local.remove(storageKey, () => {
+    const err = chrome.runtime.lastError;
+    if (err) {
+      void logger.error("content", "Failed to clear stored comment", { error: String(err), reason, key: storageKey });
+    } else {
+      void logger.info("content", "Cleared stored comment", { key: storageKey, reason });
+    }
+    storageRemovalReasons.delete(storageKey);
+  });
 };
 
 /**
  * Limpa o texto sincronizado quando o botão de submissão for clicado.
  * Para evitar múltiplos listeners, utiliza um WeakSet para controlar anexos.
  */
-const clearStoredComment = (storageKey: string, textarea: HTMLTextAreaElement, reason: ClearReason) => {
+const clearStoredComment = (storageKey: string, textarea: HTMLTextAreaElement, reason: StorageClearReason) => {
   const previousValue = textarea.value;
   textarea.value = "";
   syncRichTextEditors("");
@@ -248,15 +306,7 @@ const clearStoredComment = (storageKey: string, textarea: HTMLTextAreaElement, r
     reason,
     previousLength: previousValue.length
   });
-
-  chrome.storage.local.remove(storageKey, () => {
-    const err = chrome.runtime.lastError;
-    if (err) {
-      void logger.error("content", "Failed to clear stored comment", { error: String(err), reason });
-      return;
-    }
-    void logger.info("content", "Cleared stored comment", { key: storageKey, reason });
-  });
+  removeCommentFromStorage(storageKey, reason);
 };
 
 const registerSubmitButtonHandler = (storageKey: string, textarea: HTMLTextAreaElement) => {
@@ -375,6 +425,11 @@ const registerSubmitButtonHandler = (storageKey: string, textarea: HTMLTextAreaE
           textarea.value = saved;
           syncRichTextEditors(saved);
           void logger.info("content", "Loaded saved comment into textarea", { key: storageKey, value: saved });
+          if (!normalizedIsEmpty(saved)) {
+            removeCommentFromStorage(storageKey, "after-load");
+            textarea.value = "";
+            void logger.debug("content", "Cleared stored comment after applying to CKEditor", { key: storageKey });
+          }
         } catch (e) {
           void logger.warn("content", "Failed to load saved comment", { error: String(e) });
         }
@@ -435,6 +490,16 @@ const registerSubmitButtonHandler = (storageKey: string, textarea: HTMLTextAreaE
 
           const change = changes[storageKey];
           if (!change) {
+            return;
+          }
+
+          const pendingRemovalReason = storageRemovalReasons.get(storageKey);
+          if (pendingRemovalReason) {
+            storageRemovalReasons.delete(storageKey);
+            void logger.debug("content", "Skipping storage change triggered by local removal", {
+              key: storageKey,
+              reason: pendingRemovalReason
+            });
             return;
           }
 
