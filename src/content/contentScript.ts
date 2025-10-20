@@ -1,63 +1,3 @@
-// Preenche CKEditor em iframe com o texto salvo em comments (robusto)
-function insertTextInCkeditorIframe(text: string) {
-  const tryInsert = (iframe: HTMLIFrameElement) => {
-    if (!iframe.contentDocument) return false;
-    const body = iframe.contentDocument.body;
-    if (!body) return false;
-    let p = body.querySelector('p');
-    if (!p) {
-      p = iframe.contentDocument.createElement('p');
-      body.appendChild(p);
-    }
-    p.innerText = text;
-    return true;
-  };
-
-  const insertWhenReady = (iframe: HTMLIFrameElement) => {
-    if (tryInsert(iframe)) return;
-    let attempts = 0;
-    const maxAttempts = 30; // ~9 segundos
-    const interval = setInterval(() => {
-      attempts++;
-      if (tryInsert(iframe) || attempts >= maxAttempts) {
-        clearInterval(interval);
-      }
-    }, 300);
-  };
-
-  const observeIframe = () => {
-    const iframe = document.querySelector<HTMLIFrameElement>('.cke_wysiwyg_frame');
-    if (iframe) {
-      if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
-        insertWhenReady(iframe);
-      } else {
-        iframe.addEventListener('load', () => insertWhenReady(iframe), { once: true });
-      }
-      return true;
-    }
-    return false;
-  };
-
-  if (!observeIframe()) {
-    const observer = new MutationObserver(() => {
-      if (observeIframe()) {
-        observer.disconnect();
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(() => observer.disconnect(), 10000);
-  }
-}
-// Preenche CKEditor com o texto salvo em comments
-function setCkeditorDescription(text: string) {
-  const editable = document.querySelector<HTMLElement>('.cke_editable');
-  if (editable) {
-    const p = editable.querySelector('p');
-    if (p) {
-      p.innerText = text;
-    }
-  }
-}
 /// <reference types="chrome" />
 
 import { TOGGLE_HIGHLIGHT, type Message } from "../shared/types";
@@ -65,6 +5,195 @@ import { getStoredHighlightColor, getStoredCreateTicketUrl } from "../shared/uti
 import { logger } from "../shared/logger";
 import { ELEMENTO_HTML } from "../shared/elemento";
 
+const normalizeContent = (value: string): string => value.replace(/\r\n?|\n/g, "\n").trim();
+
+let lastSyncedRichText = "";
+let iframeMutationObserver: MutationObserver | null = null;
+let iframeAppearanceObserver: MutationObserver | null = null;
+let iframeStabilityInterval: number | null = null;
+let inlineMutationObserver: MutationObserver | null = null;
+let inlineAppearanceObserver: MutationObserver | null = null;
+
+const applyTextToIframe = (iframe: HTMLIFrameElement): boolean => {
+  const text = lastSyncedRichText;
+  const doc = iframe.contentDocument;
+  const body = doc?.body;
+  if (!doc || !body) {
+    return false;
+  }
+
+  const current = normalizeContent(body.textContent ?? "");
+  const target = normalizeContent(text);
+
+  if (current === target) {
+    return true;
+  }
+
+  let paragraph = body.querySelector<HTMLParagraphElement>("p");
+  if (!paragraph) {
+    paragraph = doc.createElement("p");
+    body.innerHTML = "";
+    body.appendChild(paragraph);
+  }
+
+  paragraph.textContent = text;
+  return normalizeContent(body.textContent ?? "") === target;
+};
+
+const startIframeWatchers = (iframe: HTMLIFrameElement) => {
+  const doc = iframe.contentDocument;
+  const body = doc?.body;
+  if (!doc || !body) {
+    return;
+  }
+
+  iframeMutationObserver?.disconnect();
+  iframeMutationObserver = new MutationObserver(() => {
+    const text = lastSyncedRichText;
+    const current = normalizeContent(body.textContent ?? "");
+    const target = normalizeContent(text);
+    if (current !== target) {
+      void logger.debug("content", "Reapplying text after iframe mutation", { targetLength: text.length });
+      applyTextToIframe(iframe);
+    }
+  });
+  iframeMutationObserver.observe(body, { childList: true, subtree: true, characterData: true });
+
+  if (iframeStabilityInterval) {
+    window.clearInterval(iframeStabilityInterval);
+  }
+  let attempts = 0;
+  let stableMatches = 0;
+  const requiredStableMatches = 4;
+  const maxAttempts = 80; // ~32s
+  iframeStabilityInterval = window.setInterval(() => {
+    attempts += 1;
+
+    const applied = applyTextToIframe(iframe);
+    if (applied) {
+      stableMatches += 1;
+    } else {
+      stableMatches = 0;
+    }
+
+    const iframeInDom = document.contains(iframe);
+    if (!iframeInDom || stableMatches >= requiredStableMatches || attempts >= maxAttempts) {
+      if (!iframeInDom) {
+        void logger.debug("content", "Iframe removed before stabilizing");
+      }
+      if (iframeStabilityInterval) {
+        window.clearInterval(iframeStabilityInterval);
+        iframeStabilityInterval = null;
+      }
+    }
+  }, 400);
+};
+
+const ensureIframeSync = () => {
+  const iframe = document.querySelector<HTMLIFrameElement>(".cke_wysiwyg_frame");
+  if (iframe) {
+    if (iframeAppearanceObserver) {
+      iframeAppearanceObserver.disconnect();
+      iframeAppearanceObserver = null;
+    }
+
+    if (iframe.contentDocument?.readyState === "complete") {
+      applyTextToIframe(iframe);
+    } else {
+      iframe.addEventListener(
+        "load",
+        () => {
+          applyTextToIframe(iframe);
+        },
+        { once: true }
+      );
+    }
+
+    startIframeWatchers(iframe);
+    return;
+  }
+
+  if (!iframeAppearanceObserver) {
+    iframeAppearanceObserver = new MutationObserver(() => {
+      const candidate = document.querySelector<HTMLIFrameElement>(".cke_wysiwyg_frame");
+      if (candidate) {
+        ensureIframeSync();
+      }
+    });
+    iframeAppearanceObserver.observe(document.body, { childList: true, subtree: true });
+  }
+};
+
+const applyTextToInlineEditor = (editable: HTMLElement) => {
+  const text = lastSyncedRichText;
+  const target = normalizeContent(text);
+  const current = normalizeContent(editable.textContent ?? "");
+
+  if (current === target) {
+    return;
+  }
+
+  let paragraph = editable.querySelector<HTMLParagraphElement>("p");
+  if (!paragraph) {
+    paragraph = editable.ownerDocument.createElement("p");
+    editable.innerHTML = "";
+    editable.appendChild(paragraph);
+  }
+
+  paragraph.textContent = text;
+};
+
+const startInlineWatchers = (editable: HTMLElement) => {
+  inlineMutationObserver?.disconnect();
+  inlineMutationObserver = new MutationObserver(() => {
+    const text = lastSyncedRichText;
+    const target = normalizeContent(text);
+    const current = normalizeContent(editable.textContent ?? "");
+    if (current !== target) {
+      void logger.debug("content", "Reapplying text after inline editor mutation", { targetLength: text.length });
+      applyTextToInlineEditor(editable);
+    }
+  });
+  inlineMutationObserver.observe(editable, { childList: true, subtree: true, characterData: true });
+};
+
+const ensureInlineEditorSync = () => {
+  const editable = document.querySelector<HTMLElement>(".cke_editable");
+  if (editable) {
+    if (inlineAppearanceObserver) {
+      inlineAppearanceObserver.disconnect();
+      inlineAppearanceObserver = null;
+    }
+    applyTextToInlineEditor(editable);
+    startInlineWatchers(editable);
+    return;
+  }
+
+  if (!inlineAppearanceObserver) {
+    inlineAppearanceObserver = new MutationObserver(() => {
+      const candidate = document.querySelector<HTMLElement>(".cke_editable");
+      if (candidate) {
+        ensureInlineEditorSync();
+      }
+    });
+    inlineAppearanceObserver.observe(document.body, { childList: true, subtree: true });
+  }
+};
+
+// Preenche CKEditor em iframe com o texto salvo em comments (robusto)
+function insertTextInCkeditorIframe(_text: string) {
+  ensureIframeSync();
+}
+// Preenche CKEditor com o texto salvo em comments
+function setCkeditorDescription(_text: string) {
+  ensureInlineEditorSync();
+}
+const syncRichTextEditors = (text: string) => {
+  void logger.debug("content", "Syncing CKEditor content", { length: text.length });
+  lastSyncedRichText = text;
+  setCkeditorDescription(text);
+  insertTextInCkeditorIframe(text);
+};
 const HIGHLIGHT_CLASS = "inva__highlight";
 
 const toggleHighlight = async () => {
@@ -148,14 +277,9 @@ chrome.runtime.onMessage.addListener((message: Message) => {
           const saved = await new Promise<string>((resolve) => {
             chrome.storage.local.get({ [storageKey]: "" }, (items) => resolve(String(items[storageKey] ?? "")));
           });
-          if (saved) {
-            textarea.value = saved;
-            void logger.info("content", "Loaded saved comment into textarea", { key: storageKey, value: saved });
-            // Também preenche o CKEditor, se existir
-            setCkeditorDescription(saved);
-            // E também preenche o CKEditor em iframe, se existir
-            insertTextInCkeditorIframe(saved);
-          }
+          textarea.value = saved;
+          syncRichTextEditors(saved);
+          void logger.info("content", "Loaded saved comment into textarea", { key: storageKey, value: saved });
         } catch (e) {
           void logger.warn("content", "Failed to load saved comment", { error: String(e) });
         }
@@ -186,8 +310,41 @@ chrome.runtime.onMessage.addListener((message: Message) => {
         };
 
         const saveDebounced = debounce(() => void saveNow("input"), 600);
-        textarea.addEventListener("input", saveDebounced);
-        textarea.addEventListener("blur", () => { void saveNow("blur"); });
+
+        const handleInput = () => {
+          const value = textarea.value;
+          syncRichTextEditors(value);
+          saveDebounced();
+        };
+
+        textarea.addEventListener("input", handleInput);
+        textarea.addEventListener("blur", () => {
+          const value = textarea.value;
+          syncRichTextEditors(value);
+          void saveNow("blur");
+        });
+
+        chrome.storage.onChanged.addListener((changes, areaName) => {
+          if (areaName !== "local") {
+            return;
+          }
+
+          const change = changes[storageKey];
+          if (!change) {
+            return;
+          }
+
+          const newValue = typeof change.newValue === "string" ? change.newValue : "";
+
+          void logger.debug("content", "Storage change detected for comments", { newValueLength: newValue.length });
+
+          if (textarea.value === newValue) {
+            return;
+          }
+
+          textarea.value = newValue;
+          syncRichTextEditors(newValue);
+        });
       } else {
         void logger.warn("content", "Textarea #comments not found inside injected wrapper");
       }

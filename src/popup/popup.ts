@@ -15,11 +15,15 @@ const logsOutput = document.getElementById("logsOutput") as HTMLPreElement | nul
 
 if (toggleButton) {
   toggleButton.addEventListener("click", async () => {
+    void logger.debug("popup", "Toggle highlight requested");
     const tab = await getActiveTab();
 
     if (tab?.id) {
       const message: Message = { type: TOGGLE_HIGHLIGHT };
+      void logger.debug("popup", "Dispatching toggle message", { tabId: tab.id });
       chrome.tabs.sendMessage(tab.id, message);
+    } else {
+      void logger.warn("popup", "No active tab found to toggle highlight");
     }
   });
 }
@@ -30,10 +34,12 @@ if (toggleButton) {
     const saved = await getStoredCreateTicketUrl();
     if (urlInput && saved) {
       urlInput.value = saved;
+      void logger.debug("popup", "Loaded stored ticket URL", { url: saved });
     }
     // estado inicial do debug
     const dbg = await debugAPI.getDebugEnabled();
     if (debugEnabledCheckbox) debugEnabledCheckbox.checked = dbg;
+    void logger.debug("popup", "Loaded debug flag", { enabled: dbg });
   } catch (e) {
     // noop
   }
@@ -43,12 +49,14 @@ if (toggleButton) {
 if (saveButton) {
   saveButton.addEventListener("click", async () => {
     const value = urlInput?.value.trim() ?? "";
+    void logger.debug("popup", "Attempting to save ticket URL", { valueLength: value.length });
     try {
       // validação básica
       if (value) {
         // Se não possuir protocolo, assume https
         const finalValue = /^(https?:)?\/\//i.test(value) ? value : `https://${value}`;
         await saveCreateTicketUrl(finalValue);
+        void logger.info("popup", "Ticket URL saved via popup", { url: finalValue });
         if (saveStatus) {
           saveStatus.textContent = "Salvo!";
           (saveStatus as HTMLElement).style.display = "block";
@@ -56,8 +64,11 @@ if (saveButton) {
             (saveStatus as HTMLElement).style.display = "none";
           }, 1500);
         }
+      } else {
+        void logger.warn("popup", "Ticket URL input empty, ignoring save");
       }
     } catch (e) {
+      void logger.error("popup", "Failed to save ticket URL", { error: String(e) });
       if (saveStatus) {
         saveStatus.textContent = "Falha ao salvar";
         (saveStatus as HTMLElement).style.display = "block";
@@ -74,6 +85,7 @@ debugEnabledCheckbox?.addEventListener("change", async () => {
 
 // Ver logs
 viewLogsBtn?.addEventListener("click", async () => {
+  void logger.debug("popup", "View logs requested");
   const logs = await debugAPI.getLogs();
   if (logsOutput) {
     logsOutput.style.display = "block";
@@ -85,6 +97,7 @@ viewLogsBtn?.addEventListener("click", async () => {
 
 // Limpar logs
 clearLogsBtn?.addEventListener("click", async () => {
+  void logger.debug("popup", "Clearing persisted logs");
   await debugAPI.clearLogs();
   if (logsOutput) logsOutput.textContent = "";
 });
