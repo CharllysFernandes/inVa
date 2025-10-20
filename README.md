@@ -1,6 +1,6 @@
 # inVa
 
-Projeto inicial de uma extensão para Google Chrome e Microsoft Edge escrita em TypeScript. A extensão realça rapidamente elementos de texto na página ativa e permite personalizar a cor de destaque.
+Projeto inicial de uma extensão para Google Chrome e Microsoft Edge escrita em TypeScript. O foco atual é facilitar o registro de chamados, sincronizando o campo de "comentários" salvo localmente com o editor enriquecido da página e oferecendo utilitários de depuração e configuração de URL.
 
 ## Pré-requisitos
 

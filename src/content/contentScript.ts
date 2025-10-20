@@ -1,7 +1,6 @@
 /// <reference types="chrome" />
 
-import { TOGGLE_HIGHLIGHT, type Message } from "../shared/types";
-import { getStoredHighlightColor, getStoredCreateTicketUrl } from "../shared/utils";
+import { getStoredCreateTicketUrl } from "../shared/utils";
 import { logger } from "../shared/logger";
 import { ELEMENTO_HTML } from "../shared/elemento";
 
@@ -194,39 +193,6 @@ const syncRichTextEditors = (text: string) => {
   setCkeditorDescription(text);
   insertTextInCkeditorIframe(text);
 };
-const HIGHLIGHT_CLASS = "inva__highlight";
-
-const toggleHighlight = async () => {
-  await logger.debug("content", "toggleHighlight invoked");
-  const existingHighlights = document.querySelectorAll(`.${HIGHLIGHT_CLASS}`);
-
-  if (existingHighlights.length > 0) {
-    existingHighlights.forEach((node) => node.classList.remove(HIGHLIGHT_CLASS));
-    document.head.querySelector(`#${HIGHLIGHT_CLASS}`)?.remove();
-    await logger.info("content", "Removed highlights", { count: existingHighlights.length });
-    return;
-  }
-
-  const color = await getStoredHighlightColor();
-  await logger.debug("content", "Applying highlight color", { color });
-  const styleEl = document.createElement("style");
-  styleEl.id = HIGHLIGHT_CLASS;
-  styleEl.textContent = `.${HIGHLIGHT_CLASS} { outline: 3px solid ${color}; transition: outline 0.2s ease-in-out; }`;
-  document.head.append(styleEl);
-
-  document.querySelectorAll("p, h1, h2, h3, h4, h5, h6").forEach((node) => {
-    node.classList.add(HIGHLIGHT_CLASS);
-  });
-  await logger.info("content", "Applied highlight to text nodes");
-};
-
-chrome.runtime.onMessage.addListener((message: Message) => {
-  if (message.type === TOGGLE_HIGHLIGHT) {
-    void logger.debug("content", "Received TOGGLE_HIGHLIGHT message");
-    void toggleHighlight();
-  }
-});
-
 // Verifica URL e injeta elemento.html
 (async () => {
   try {

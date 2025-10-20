@@ -1,10 +1,8 @@
 /// <reference types="chrome" />
 
-import { TOGGLE_HIGHLIGHT, type Message } from "../shared/types";
-import { getActiveTab, getStoredCreateTicketUrl, saveCreateTicketUrl } from "../shared/utils";
+import { getStoredCreateTicketUrl, saveCreateTicketUrl } from "../shared/utils";
 import { debugAPI, logger } from "../shared/logger";
 
-const toggleButton = document.getElementById("toggleHighlight");
 const urlInput = document.getElementById("createTicketUrl") as HTMLInputElement | null;
 const saveButton = document.getElementById("saveCreateTicketUrl");
 const saveStatus = document.getElementById("saveStatus");
@@ -12,21 +10,6 @@ const debugEnabledCheckbox = document.getElementById("debugEnabled") as HTMLInpu
 const viewLogsBtn = document.getElementById("viewLogs");
 const clearLogsBtn = document.getElementById("clearLogs");
 const logsOutput = document.getElementById("logsOutput") as HTMLPreElement | null;
-
-if (toggleButton) {
-  toggleButton.addEventListener("click", async () => {
-    void logger.debug("popup", "Toggle highlight requested");
-    const tab = await getActiveTab();
-
-    if (tab?.id) {
-      const message: Message = { type: TOGGLE_HIGHLIGHT };
-      void logger.debug("popup", "Dispatching toggle message", { tabId: tab.id });
-      chrome.tabs.sendMessage(tab.id, message);
-    } else {
-      void logger.warn("popup", "No active tab found to toggle highlight");
-    }
-  });
-}
 
 // Carrega URL salva ao abrir popup
 (async () => {

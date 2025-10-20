@@ -44,17 +44,6 @@ export const saveHighlightColor = async (color: string): Promise<void> => {
   });
 };
 
-export const getActiveTab = (): Promise<chrome.tabs.Tab | undefined> => {
-  void logger.debug("shared", "Querying active tab");
-  return new Promise((resolve) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs[0];
-      void logger.debug("shared", "Active tab resolved", { tabId: tab?.id ?? null });
-      resolve(tab);
-    });
-  });
-};
-
 // URL de criação de chamado
 const CREATE_TICKET_URL_KEY = "createTicketUrl" as const;
 
