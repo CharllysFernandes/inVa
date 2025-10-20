@@ -20,6 +20,7 @@ let inlineAppearanceObserver: MutationObserver | null = null;
 const wiredSubmitElements = new WeakSet<Element>();
 const wiredSubmitForms = new WeakSet<HTMLFormElement>();
 const SUBMIT_BUTTON_SELECTOR = "#submit_button.button-blue";
+type ClearReason = "button-click" | "form-submit" | "manual-clear";
 
 /**
  * Aplica o último texto sincronizado dentro do iframe do CKEditor.
@@ -237,27 +238,28 @@ const syncRichTextEditors = (text: string) => {
  * Limpa o texto sincronizado quando o botão de submissão for clicado.
  * Para evitar múltiplos listeners, utiliza um WeakSet para controlar anexos.
  */
+const clearStoredComment = (storageKey: string, textarea: HTMLTextAreaElement, reason: ClearReason) => {
+  const previousValue = textarea.value;
+  textarea.value = "";
+  syncRichTextEditors("");
+  textarea.focus();
+  void logger.debug("content", "Clearing stored comment", {
+    key: storageKey,
+    reason,
+    previousLength: previousValue.length
+  });
+
+  chrome.storage.local.remove(storageKey, () => {
+    const err = chrome.runtime.lastError;
+    if (err) {
+      void logger.error("content", "Failed to clear stored comment", { error: String(err), reason });
+      return;
+    }
+    void logger.info("content", "Cleared stored comment", { key: storageKey, reason });
+  });
+};
+
 const registerSubmitButtonHandler = (storageKey: string, textarea: HTMLTextAreaElement) => {
-  const clearStoredComment = (reason: "button-click" | "form-submit") => {
-    const previousValue = textarea.value;
-    textarea.value = "";
-    syncRichTextEditors("");
-    void logger.debug("content", "Clearing stored comment", {
-      key: storageKey,
-      reason,
-      previousLength: previousValue.length
-    });
-
-    chrome.storage.local.remove(storageKey, () => {
-      const err = chrome.runtime.lastError;
-      if (err) {
-        void logger.error("content", "Failed to clear stored comment after submit", { error: String(err) });
-        return;
-      }
-      void logger.info("content", "Cleared stored comment after submit", { key: storageKey, reason });
-    });
-  };
-
   const tryAttachButton = (): boolean => {
     const element = document.querySelector(SUBMIT_BUTTON_SELECTOR);
     if (!element || !(element instanceof HTMLElement)) {
@@ -268,7 +270,7 @@ const registerSubmitButtonHandler = (storageKey: string, textarea: HTMLTextAreaE
       return true;
     }
 
-    element.addEventListener("click", () => clearStoredComment("button-click"));
+    element.addEventListener("click", () => clearStoredComment(storageKey, textarea, "button-click"));
     wiredSubmitElements.add(element);
     void logger.debug("content", "Attached submit button listener to clear comments");
     return true;
@@ -287,7 +289,7 @@ const registerSubmitButtonHandler = (storageKey: string, textarea: HTMLTextAreaE
     form.addEventListener(
       "submit",
       () => {
-        clearStoredComment("form-submit");
+        clearStoredComment(storageKey, textarea, "form-submit");
       },
       { capture: true }
     );
@@ -418,6 +420,13 @@ const registerSubmitButtonHandler = (storageKey: string, textarea: HTMLTextAreaE
         });
 
         registerSubmitButtonHandler(storageKey, textarea);
+
+        const clearButton = wrapper.querySelector<HTMLButtonElement>("#clearCommentButton");
+        if (clearButton) {
+          clearButton.addEventListener("click", () => {
+            clearStoredComment(storageKey, textarea, "manual-clear");
+          });
+        }
 
         chrome.storage.onChanged.addListener((changes, areaName) => {
           if (areaName !== "local") {
