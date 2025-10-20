@@ -30,7 +30,6 @@
     "host_permissions": [
         "<all_urls>"
     ],
-    "options_page": "options.html",
     "content_scripts": [
         {
             "matches": [

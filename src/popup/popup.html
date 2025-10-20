@@ -7,24 +7,48 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <main>
-      <h1>inVa</h1>
-      <section>
-        <label for="createTicketUrl">URL de criação de chamado</label>
-        <input id="createTicketUrl" type="url" placeholder="https://exemplo.com/criar-chamado" style="width: 100%; box-sizing: border-box;"/>
-        <button id="saveCreateTicketUrl" type="button">Salvar URL</button>
-        <p id="saveStatus" aria-live="polite" style="font-size: 12px; color: #4caf50; display:none;">Salvo!</p>
+    <main class="popup-layout">
+      <header class="app-header">
+        <img src="Logo.png" alt="Logotipo da inVa" class="app-logo" width="40" height="40" />
+        <div class="app-meta">
+          <h1 class="app-title">inVa</h1>
+          <p id="appVersion" class="app-version" aria-live="polite">&nbsp;</p>
+        </div>
+      </header>
+
+      <section class="card" aria-labelledby="ticket-section-title">
+        <div class="card-header">
+          <h2 id="ticket-section-title" class="card-title">Fluxo do chamado</h2>
+          <p class="card-subtitle">Salve a URL base que será usada para detectar o contexto correto.</p>
+        </div>
+        <label class="input-label" for="createTicketUrl">URL de criação de chamado</label>
+        <input
+          id="createTicketUrl"
+          class="text-input"
+          type="url"
+          placeholder="https://exemplo.com/criar-chamado"
+          autocomplete="off"
+        />
+        <div class="actions">
+          <button id="saveCreateTicketUrl" type="button" class="primary">Salvar URL</button>
+          <p id="saveStatus" class="status-message" aria-live="polite" hidden>Salvo!</p>
+        </div>
       </section>
 
-      <hr />
-
-      <section>
-        <label><input id="debugEnabled" type="checkbox" /> Modo debug</label>
-        <div style="margin-top: 8px;">
-          <button id="viewLogs" type="button">Ver logs</button>
-          <button id="clearLogs" type="button">Limpar logs</button>
+      <section class="card" aria-labelledby="diagnostics-section-title">
+        <div class="card-header">
+          <h2 id="diagnostics-section-title" class="card-title">Diagnóstico</h2>
+          <p class="card-subtitle">Use o modo debug para investigar comportamentos e acessar os últimos registros.</p>
         </div>
-        <pre id="logsOutput" style="white-space: pre-wrap; max-height: 240px; overflow: auto; background: #f6f8fa; padding: 8px; display:none;"></pre>
+        <label class="toggle" for="debugEnabled">
+          <input id="debugEnabled" type="checkbox" />
+          <span>Modo debug</span>
+        </label>
+        <div class="actions">
+          <button id="viewLogs" type="button" class="secondary">Ver logs</button>
+          <button id="clearLogs" type="button" class="secondary">Limpar logs</button>
+        </div>
+        <pre id="logsOutput" class="log-output" hidden></pre>
       </section>
     </main>
     <script type="module" src="popup.js"></script>

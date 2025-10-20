@@ -9,8 +9,7 @@ module.exports = {
   entry: {
     background: path.resolve(__dirname, "src/background/background.ts"),
     contentScript: path.resolve(__dirname, "src/content/contentScript.ts"),
-    popup: path.resolve(__dirname, "src/popup/popup.ts"),
-    options: path.resolve(__dirname, "src/options/options.ts")
+  popup: path.resolve(__dirname, "src/popup/popup.ts")
   },
   output: {
     path: path.resolve(__dirname, "dist"),
@@ -38,8 +37,6 @@ module.exports = {
         { from: "manifest.json", to: "." },
         { from: "src/popup/popup.html", to: "popup.html" },
         { from: "src/popup/popup.css", to: "popup.css" },
-        { from: "src/options/options.html", to: "options.html" },
-        { from: "src/options/options.css", to: "options.css" },
         { from: "src/shared/Logo.png", to: "Logo.png" }
       ]
     })

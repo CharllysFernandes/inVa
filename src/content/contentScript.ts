@@ -4,6 +4,11 @@ import { getStoredCreateTicketUrl } from "../shared/utils";
 import { logger } from "../shared/logger";
 import { ELEMENTO_HTML } from "../shared/elemento";
 
+/**
+ * Normaliza o texto para facilitar comparações entre edições do CKEditor.
+ * - Converte toda quebra de linha para "\n".
+ * - Remove espaços excedentes no começo e no final.
+ */
 const normalizeContent = (value: string): string => value.replace(/\r\n?|\n/g, "\n").trim();
 
 let lastSyncedRichText = "";
@@ -12,7 +17,14 @@ let iframeAppearanceObserver: MutationObserver | null = null;
 let iframeStabilityInterval: number | null = null;
 let inlineMutationObserver: MutationObserver | null = null;
 let inlineAppearanceObserver: MutationObserver | null = null;
+const wiredSubmitElements = new WeakSet<Element>();
+const wiredSubmitForms = new WeakSet<HTMLFormElement>();
+const SUBMIT_BUTTON_SELECTOR = "#submit_button.button-blue";
 
+/**
+ * Aplica o último texto sincronizado dentro do iframe do CKEditor.
+ * Retorna `true` quando o conteúdo final corresponde ao esperado.
+ */
 const applyTextToIframe = (iframe: HTMLIFrameElement): boolean => {
   const text = lastSyncedRichText;
   const doc = iframe.contentDocument;
@@ -39,6 +51,10 @@ const applyTextToIframe = (iframe: HTMLIFrameElement): boolean => {
   return normalizeContent(body.textContent ?? "") === target;
 };
 
+/**
+ * Observa o iframe para detectar alterações que limpem o conteúdo
+ * e reaplica o texto salvo até que o editor estabilize.
+ */
 const startIframeWatchers = (iframe: HTMLIFrameElement) => {
   const doc = iframe.contentDocument;
   const body = doc?.body;
@@ -88,6 +104,10 @@ const startIframeWatchers = (iframe: HTMLIFrameElement) => {
   }, 400);
 };
 
+/**
+ * Garante que o iframe do CKEditor exista e esteja pronto para receber o texto.
+ * Se o iframe ainda não estiver disponível, permanece observando o DOM.
+ */
 const ensureIframeSync = () => {
   const iframe = document.querySelector<HTMLIFrameElement>(".cke_wysiwyg_frame");
   if (iframe) {
@@ -123,6 +143,9 @@ const ensureIframeSync = () => {
   }
 };
 
+/**
+ * Reproduz o conteúdo sincronizado em instâncias inline do CKEditor.
+ */
 const applyTextToInlineEditor = (editable: HTMLElement) => {
   const text = lastSyncedRichText;
   const target = normalizeContent(text);
@@ -142,6 +165,10 @@ const applyTextToInlineEditor = (editable: HTMLElement) => {
   paragraph.textContent = text;
 };
 
+/**
+ * Configura observadores para reinstaurar o texto sempre que o editor inline
+ * sofrer alterações que removam o conteúdo sincronizado.
+ */
 const startInlineWatchers = (editable: HTMLElement) => {
   inlineMutationObserver?.disconnect();
   inlineMutationObserver = new MutationObserver(() => {
@@ -156,6 +183,10 @@ const startInlineWatchers = (editable: HTMLElement) => {
   inlineMutationObserver.observe(editable, { childList: true, subtree: true, characterData: true });
 };
 
+/**
+ * Localiza o editor inline e aplica o texto salvo.
+ * Caso ele ainda não esteja no DOM, mantém uma vigilância até aparecer.
+ */
 const ensureInlineEditorSync = () => {
   const editable = document.querySelector<HTMLElement>(".cke_editable");
   if (editable) {
@@ -179,21 +210,117 @@ const ensureInlineEditorSync = () => {
   }
 };
 
-// Preenche CKEditor em iframe com o texto salvo em comments (robusto)
+/**
+ * Dispara o pipeline de sincronização para edições baseadas em iframe.
+ */
 function insertTextInCkeditorIframe(_text: string) {
   ensureIframeSync();
 }
-// Preenche CKEditor com o texto salvo em comments
+/**
+ * Dispara o pipeline de sincronização para edições inline do CKEditor.
+ */
 function setCkeditorDescription(_text: string) {
   ensureInlineEditorSync();
 }
+/**
+ * Atualiza os diferentes modos do CKEditor (iframe e inline) com o texto fornecido
+ * e registra o valor sincronizado para reaplicações futuras.
+ */
 const syncRichTextEditors = (text: string) => {
   void logger.debug("content", "Syncing CKEditor content", { length: text.length });
   lastSyncedRichText = text;
   setCkeditorDescription(text);
   insertTextInCkeditorIframe(text);
 };
-// Verifica URL e injeta elemento.html
+
+/**
+ * Limpa o texto sincronizado quando o botão de submissão for clicado.
+ * Para evitar múltiplos listeners, utiliza um WeakSet para controlar anexos.
+ */
+const registerSubmitButtonHandler = (storageKey: string, textarea: HTMLTextAreaElement) => {
+  const clearStoredComment = (reason: "button-click" | "form-submit") => {
+    const previousValue = textarea.value;
+    textarea.value = "";
+    syncRichTextEditors("");
+    void logger.debug("content", "Clearing stored comment", {
+      key: storageKey,
+      reason,
+      previousLength: previousValue.length
+    });
+
+    chrome.storage.local.remove(storageKey, () => {
+      const err = chrome.runtime.lastError;
+      if (err) {
+        void logger.error("content", "Failed to clear stored comment after submit", { error: String(err) });
+        return;
+      }
+      void logger.info("content", "Cleared stored comment after submit", { key: storageKey, reason });
+    });
+  };
+
+  const tryAttachButton = (): boolean => {
+    const element = document.querySelector(SUBMIT_BUTTON_SELECTOR);
+    if (!element || !(element instanceof HTMLElement)) {
+      return false;
+    }
+
+    if (wiredSubmitElements.has(element)) {
+      return true;
+    }
+
+    element.addEventListener("click", () => clearStoredComment("button-click"));
+    wiredSubmitElements.add(element);
+    void logger.debug("content", "Attached submit button listener to clear comments");
+    return true;
+  };
+
+  const tryAttachForm = (): boolean => {
+    const form = textarea.closest("form");
+    if (!form) {
+      return false;
+    }
+
+    if (wiredSubmitForms.has(form)) {
+      return true;
+    }
+
+    form.addEventListener(
+      "submit",
+      () => {
+        clearStoredComment("form-submit");
+      },
+      { capture: true }
+    );
+    wiredSubmitForms.add(form);
+    void logger.debug("content", "Attached form submit listener to clear comments");
+    return true;
+  };
+
+  const ensureHandlers = (): boolean => {
+    const buttonAttached = tryAttachButton();
+    const formAttached = tryAttachForm();
+    return buttonAttached || formAttached;
+  };
+
+  if (ensureHandlers()) {
+    return;
+  }
+
+  const observer = new MutationObserver(() => {
+    if (ensureHandlers()) {
+      observer.disconnect();
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.setTimeout(() => observer.disconnect(), 10000);
+};
+/**
+ * Fluxo principal:
+ * 1. Confere se a URL atual corresponde à URL salva no popup.
+ * 2. Injeta o formulário auxiliar no container esperado.
+ * 3. Sincroniza o textarea local e o editor rico com dados persistidos.
+ */
 (async () => {
   try {
   const savedUrl = await getStoredCreateTicketUrl();
@@ -289,6 +416,8 @@ const syncRichTextEditors = (text: string) => {
           syncRichTextEditors(value);
           void saveNow("blur");
         });
+
+        registerSubmitButtonHandler(storageKey, textarea);
 
         chrome.storage.onChanged.addListener((changes, areaName) => {
           if (areaName !== "local") {

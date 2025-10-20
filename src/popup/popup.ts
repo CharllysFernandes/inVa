@@ -5,11 +5,25 @@ import { debugAPI, logger } from "../shared/logger";
 
 const urlInput = document.getElementById("createTicketUrl") as HTMLInputElement | null;
 const saveButton = document.getElementById("saveCreateTicketUrl");
-const saveStatus = document.getElementById("saveStatus");
+const saveStatus = document.getElementById("saveStatus") as HTMLParagraphElement | null;
 const debugEnabledCheckbox = document.getElementById("debugEnabled") as HTMLInputElement | null;
 const viewLogsBtn = document.getElementById("viewLogs");
 const clearLogsBtn = document.getElementById("clearLogs");
 const logsOutput = document.getElementById("logsOutput") as HTMLPreElement | null;
+const appVersionLabel = document.getElementById("appVersion");
+
+// Apresenta versão da extensão no cabeçalho
+try {
+  const manifest = chrome.runtime.getManifest();
+  const version = manifest.version_name ?? manifest.version;
+  if (appVersionLabel) {
+    appVersionLabel.textContent = `v${version}`;
+  }
+} catch {
+  if (appVersionLabel) {
+    appVersionLabel.textContent = "v";
+  }
+}
 
 // Carrega URL salva ao abrir popup
 (async () => {
@@ -42,9 +56,11 @@ if (saveButton) {
         void logger.info("popup", "Ticket URL saved via popup", { url: finalValue });
         if (saveStatus) {
           saveStatus.textContent = "Salvo!";
-          (saveStatus as HTMLElement).style.display = "block";
+          saveStatus.hidden = false;
           setTimeout(() => {
-            (saveStatus as HTMLElement).style.display = "none";
+            if (saveStatus) {
+              saveStatus.hidden = true;
+            }
           }, 1500);
         }
       } else {
@@ -54,7 +70,7 @@ if (saveButton) {
       void logger.error("popup", "Failed to save ticket URL", { error: String(e) });
       if (saveStatus) {
         saveStatus.textContent = "Falha ao salvar";
-        (saveStatus as HTMLElement).style.display = "block";
+        saveStatus.hidden = false;
       }
     }
   });
@@ -71,7 +87,7 @@ viewLogsBtn?.addEventListener("click", async () => {
   void logger.debug("popup", "View logs requested");
   const logs = await debugAPI.getLogs();
   if (logsOutput) {
-    logsOutput.style.display = "block";
+    logsOutput.hidden = false;
     logsOutput.textContent = logs
       .map((l) => `${new Date(l.ts).toISOString()} [${l.level.toUpperCase()}] ${l.component}: ${l.message}${l.data ? "\n  " + JSON.stringify(l.data, null, 2) : ""}`)
       .join("\n");
@@ -82,5 +98,8 @@ viewLogsBtn?.addEventListener("click", async () => {
 clearLogsBtn?.addEventListener("click", async () => {
   void logger.debug("popup", "Clearing persisted logs");
   await debugAPI.clearLogs();
-  if (logsOutput) logsOutput.textContent = "";
+  if (logsOutput) {
+    logsOutput.textContent = "";
+    logsOutput.hidden = true;
+  }
 });

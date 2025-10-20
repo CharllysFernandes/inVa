@@ -44,7 +44,6 @@ Projeto inicial de uma extensão para Google Chrome e Microsoft Edge escrita em 
 - `src/background`: scripts de background/service worker.
 - `src/content`: scripts injetados nas páginas.
 - `src/popup`: interface do popup de ação.
-- `src/options`: página de opções da extensão.
 - `src/shared`: utilitários e tipos compartilhados.
 
 ## Próximos passos sugeridos
