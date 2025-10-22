@@ -1,29 +1,20 @@
 /// <reference types="chrome" />
 
-export type LogLevel = "debug" | "info" | "warn" | "error";
+import { STORAGE_KEYS, LIMITS } from "./constants";
+import type { LogEntry, LogLevel, LogComponent } from "./types";
 
-export type LogEntry = {
-  ts: number;
-  level: LogLevel;
-  component: "background" | "content" | "popup" | string;
-  message: string;
-  data?: unknown;
-};
-
-const DEBUG_KEY = "inva_debug_enabled" as const;
-const LOGS_KEY = "inva_logs" as const;
-const MAX_LOGS = 200;
+export type { LogEntry, LogLevel, LogComponent };
 
 export const getDebugEnabled = async (): Promise<boolean> =>
   new Promise((resolve) => {
-    chrome.storage.sync.get({ [DEBUG_KEY]: false }, (items) => {
-      resolve(Boolean(items[DEBUG_KEY]));
+    chrome.storage.sync.get({ [STORAGE_KEYS.DEBUG_ENABLED]: false }, (items) => {
+      resolve(Boolean(items[STORAGE_KEYS.DEBUG_ENABLED]));
     });
   });
 
 export const setDebugEnabled = async (enabled: boolean): Promise<void> =>
   new Promise((resolve, reject) => {
-    chrome.storage.sync.set({ [DEBUG_KEY]: enabled }, () => {
+    chrome.storage.sync.set({ [STORAGE_KEYS.DEBUG_ENABLED]: enabled }, () => {
       const err = chrome.runtime.lastError;
       if (err) reject(err);
       else resolve();
@@ -32,15 +23,15 @@ export const setDebugEnabled = async (enabled: boolean): Promise<void> =>
 
 export const getLogs = async (): Promise<LogEntry[]> =>
   new Promise((resolve) => {
-    chrome.storage.local.get({ [LOGS_KEY]: [] as LogEntry[] }, (items) => {
-      const list = Array.isArray(items[LOGS_KEY]) ? (items[LOGS_KEY] as LogEntry[]) : [];
+    chrome.storage.local.get({ [STORAGE_KEYS.LOGS]: [] as LogEntry[] }, (items) => {
+      const list = Array.isArray(items[STORAGE_KEYS.LOGS]) ? (items[STORAGE_KEYS.LOGS] as LogEntry[]) : [];
       resolve(list);
     });
   });
 
 export const clearLogs = async (): Promise<void> =>
   new Promise((resolve, reject) => {
-    chrome.storage.local.set({ [LOGS_KEY]: [] }, () => {
+    chrome.storage.local.set({ [STORAGE_KEYS.LOGS]: [] }, () => {
       const err = chrome.runtime.lastError;
       if (err) reject(err);
       else resolve();
@@ -66,9 +57,9 @@ const pushLog = async (entry: LogEntry): Promise<void> => {
   try {
     const current = await getLogs();
     current.push(entry);
-    const pruned = current.slice(-MAX_LOGS);
+    const pruned = current.slice(-LIMITS.MAX_LOGS);
     await new Promise<void>((resolve, reject) => {
-      chrome.storage.local.set({ [LOGS_KEY]: pruned }, () => {
+      chrome.storage.local.set({ [STORAGE_KEYS.LOGS]: pruned }, () => {
         const err = chrome.runtime.lastError;
         if (err) reject(err);
         else resolve();
@@ -80,7 +71,7 @@ const pushLog = async (entry: LogEntry): Promise<void> => {
 };
 
 export const logger = {
-  async log(level: LogLevel, component: LogEntry["component"], message: string, data?: unknown) {
+  async log(level: LogLevel, component: LogComponent, message: string, data?: unknown) {
     const entry: LogEntry = { ts: Date.now(), level, component, message, data };
     // Always console for error/warn; gate others behind debug flag
     const enabled = await getDebugEnabled();
@@ -95,16 +86,16 @@ export const logger = {
       await pushLog(entry);
     }
   },
-  debug(component: LogEntry["component"], message: string, data?: unknown) {
+  debug(component: LogComponent, message: string, data?: unknown) {
     return this.log("debug", component, message, data);
   },
-  info(component: LogEntry["component"], message: string, data?: unknown) {
+  info(component: LogComponent, message: string, data?: unknown) {
     return this.log("info", component, message, data);
   },
-  warn(component: LogEntry["component"], message: string, data?: unknown) {
+  warn(component: LogComponent, message: string, data?: unknown) {
     return this.log("warn", component, message, data);
   },
-  error(component: LogEntry["component"], message: string, data?: unknown) {
+  error(component: LogComponent, message: string, data?: unknown) {
     return this.log("error", component, message, data);
   }
 };

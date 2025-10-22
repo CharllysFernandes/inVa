@@ -2,6 +2,7 @@
 
 import { getStoredCreateTicketUrl, saveCreateTicketUrl } from "../shared/utils";
 import { debugAPI, logger } from "../shared/logger";
+import { LIMITS } from "../shared/constants";
 
 const urlInput = document.getElementById("createTicketUrl") as HTMLInputElement | null;
 const saveButton = document.getElementById("saveCreateTicketUrl");
@@ -61,7 +62,7 @@ if (saveButton) {
             if (saveStatus) {
               saveStatus.hidden = true;
             }
-          }, 1500);
+          }, LIMITS.STATUS_MESSAGE_DURATION_MS);
         }
       } else {
         void logger.warn("popup", "Ticket URL input empty, ignoring save");

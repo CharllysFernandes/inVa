@@ -56,10 +56,40 @@ Extensão para Google Chrome e Microsoft Edge escrita em TypeScript cujo objetiv
 
 ## Estrutura dos diretórios
 
-- `src/background`: scripts de background/service worker.
-- `src/content`: scripts injetados nas páginas.
-- `src/popup`: interface do popup de ação.
-- `src/shared`: utilitários e tipos compartilhados.
+```
+src/
+├── background/         # Service worker (MV3)
+│   └── background.ts
+├── content/           # Scripts injetados nas páginas
+│   ├── contentScript.ts  # Orquestração principal
+│   └── editor-sync.ts    # Sincronização CKEditor
+├── popup/             # Interface do popup
+│   ├── popup.ts
+│   ├── popup.html
+│   └── popup.css
+└── shared/            # Módulos compartilhados
+    ├── constants.ts      # Constantes centralizadas
+    ├── types.ts          # Definições de tipos TypeScript
+    ├── logger.ts         # Sistema de logging
+    ├── utils.ts          # Utilitários de storage de URL
+    ├── comment-storage.ts # Gerenciador de comentários
+    ├── text-utils.ts     # Normalização de texto
+    ├── dom-utils.ts      # Helpers de DOM
+    └── elemento.ts       # Template HTML injetado
+```
+
+### Arquitetura modularizada
+
+O projeto foi organizado seguindo princípios SOLID e boas práticas TypeScript:
+
+- **Separação de responsabilidades**: cada módulo tem uma função clara e única
+- **Injeção de dependências**: uso de módulos singleton exportados (`editorSync`, `commentStorage`)
+- **Constantes centralizadas**: seletores, limites e chaves de storage em `constants.ts`
+- **Tipagem forte**: tipos compartilhados em `types.ts` evitam duplicação
+- **Utilitários reutilizáveis**: helpers de DOM, texto e debounce isolados
+- **Manager classes**: `CKEditorSyncManager` e `CommentStorageManager` encapsulam estado e lógica complexa
+- **Factory functions**: `createCommentForm()` cria elementos programaticamente com type-safety
+- **CSS modular**: estilos encapsulados com prefixo `inva-` evitam conflitos
 
 ## Próximos passos sugeridos
 
