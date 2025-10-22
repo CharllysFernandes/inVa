@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { getStoredCreateTicketUrl, saveCreateTicketUrl } from "./utils";
+import { getStoredCreateTicketUrl, saveCreateTicketUrl, __resetUrlStorageRateLimiters } from "./utils";
 import { STORAGE_KEYS } from "./constants";
 
 describe("utils", () => {
@@ -13,6 +13,8 @@ describe("utils", () => {
     vi.clearAllMocks();
     await chrome.storage.sync.clear();
     await chrome.storage.local.clear();
+    // Resetar rate limiters
+    __resetUrlStorageRateLimiters();
   });
 
   describe("getStoredCreateTicketUrl()", () => {
@@ -101,14 +103,14 @@ describe("utils", () => {
       const testUrl = "https://example.com/concurrent";
       await chrome.storage.sync.set({ [STORAGE_KEYS.CREATE_TICKET_URL]: testUrl });
 
-      // Múltiplas leituras simultâneas
-      const results = await Promise.all([
-        getStoredCreateTicketUrl(),
-        getStoredCreateTicketUrl(),
-        getStoredCreateTicketUrl()
-      ]);
+      // Leituras sequenciais com delay para respeitar rate limit
+      const result1 = await getStoredCreateTicketUrl();
+      await new Promise(resolve => setTimeout(resolve, 10));
+      const result2 = await getStoredCreateTicketUrl();
+      await new Promise(resolve => setTimeout(resolve, 10));
+      const result3 = await getStoredCreateTicketUrl();
 
-      expect(results).toEqual([testUrl, testUrl, testUrl]);
+      expect([result1, result2, result3]).toEqual([testUrl, testUrl, testUrl]);
     });
   });
 
@@ -199,12 +201,16 @@ describe("utils", () => {
         "https://example3.com"
       ];
 
-      // Múltiplas gravações simultâneas
-      await Promise.all(urls.map(url => saveCreateTicketUrl(url)));
+      // Gravações sequenciais com delay para respeitar rate limit
+      await saveCreateTicketUrl(urls[0]);
+      await new Promise(resolve => setTimeout(resolve, 15));
+      await saveCreateTicketUrl(urls[1]);
+      await new Promise(resolve => setTimeout(resolve, 15));
+      await saveCreateTicketUrl(urls[2]);
 
-      // A última gravação deve prevalecer (mas qual é indeterminado em concurrent)
+      // A última gravação deve prevalecer
       const result = await chrome.storage.sync.get(STORAGE_KEYS.CREATE_TICKET_URL);
-      expect(urls).toContain(result[STORAGE_KEYS.CREATE_TICKET_URL]);
+      expect(result[STORAGE_KEYS.CREATE_TICKET_URL]).toBe(urls[2]);
     });
 
     it("should resolve promise after successful save", async () => {
@@ -236,14 +242,18 @@ describe("utils", () => {
 
       for (const url of urls) {
         await saveCreateTicketUrl(url);
+        await new Promise(resolve => setTimeout(resolve, 15));
         const retrieved = await getStoredCreateTicketUrl();
         expect(retrieved).toBe(url);
+        await new Promise(resolve => setTimeout(resolve, 10));
       }
     });
 
     it("should clear URL by saving empty string then reading", async () => {
       await saveCreateTicketUrl("https://example.com/test");
+      await new Promise(resolve => setTimeout(resolve, 15));
       await saveCreateTicketUrl("");
+      await new Promise(resolve => setTimeout(resolve, 10));
       
       const retrieved = await getStoredCreateTicketUrl();
 

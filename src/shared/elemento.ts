@@ -1,7 +1,15 @@
+/**
+ * Factory de criação programática do formulário de comentários
+ * @module elemento
+ */
+
 import { ELEMENT_IDS, CSS_CLASSES } from "./constants";
 
 /**
  * Configuração do formulário de comentário
+ * @interface CommentFormConfig
+ * @property {string} [placeholder] - Texto placeholder do textarea
+ * @property {number} [rows] - Número de linhas visíveis do textarea
  */
 export interface CommentFormConfig {
   placeholder?: string;
@@ -10,12 +18,21 @@ export interface CommentFormConfig {
 
 /**
  * Elementos retornados ao criar o formulário
+ * @interface CommentFormElements
+ * @property {HTMLFormElement} form - Elemento form principal
+ * @property {HTMLTextAreaElement} textarea - Textarea de comentários
  */
 export interface CommentFormElements {
   form: HTMLFormElement;
   textarea: HTMLTextAreaElement;
 }
 
+/**
+ * Configuração padrão do formulário
+ * @private
+ * @constant
+ * @type {Required<CommentFormConfig>}
+ */
 const DEFAULT_CONFIG: Required<CommentFormConfig> = {
   placeholder: "Digite sua anotação aqui...",
   rows: 4
@@ -23,7 +40,12 @@ const DEFAULT_CONFIG: Required<CommentFormConfig> = {
 
 /**
  * Injeta os estilos CSS do formulário de comentário no documento
- * Evita injeção duplicada verificando existência prévia
+ * Evita injeção duplicada verificando existência prévia do style tag
+ * @function injectCommentFormStyles
+ * @returns {void}
+ * @example
+ * injectCommentFormStyles();
+ * // CSS será injetado apenas uma vez, mesmo com múltiplas chamadas
  */
 export function injectCommentFormStyles(): void {
   if (document.getElementById(ELEMENT_IDS.FORM_STYLES)) return;
@@ -62,8 +84,16 @@ export function injectCommentFormStyles(): void {
 
 /**
  * Cria o formulário de anotação de chamado programaticamente
- * @param config - Configuração opcional do formulário
- * @returns Objeto contendo as referências aos elementos criados
+ * Injeta estilos automaticamente e retorna referências aos elementos
+ * @function createCommentForm
+ * @param {CommentFormConfig} [config={}] - Configuração opcional do formulário
+ * @returns {CommentFormElements} Objeto contendo as referências aos elementos criados
+ * @example
+ * const { form, textarea } = createCommentForm({
+ *   placeholder: 'Digite aqui...',
+ *   rows: 6
+ * });
+ * document.body.appendChild(form);
  */
 export function createCommentForm(config: CommentFormConfig = {}): CommentFormElements {
   const finalConfig = { ...DEFAULT_CONFIG, ...config };

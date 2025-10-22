@@ -89,7 +89,37 @@
 <a name='L24'></a><a href='#L24'>24</a>
 <a name='L25'></a><a href='#L25'>25</a>
 <a name='L26'></a><a href='#L26'>26</a>
-<a name='L27'></a><a href='#L27'>27</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -105,9 +135,25 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">53x</span>
 <span class="cline-any cline-yes">53x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -116,20 +162,35 @@
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
- * Utilitários para normalização e validação de conteúdo
+ * Utilitários para normalização e validação de conteúdo de texto
+ * @module text-utils
  */
 &nbsp;
 /**
- * Normaliza o texto para facilitar comparações entre edições do CKEditor.
- * - Converte toda quebra de linha para "\n".
- * - Remove espaços excedentes no começo e no final.
+ * Normaliza o texto para facilitar comparações entre edições do CKEditor
+ * - Converte toda quebra de linha (CRLF, CR, LF) para "\n"
+ * - Remove espaços excedentes no começo e no final
+ * @function normalizeContent
+ * @param {string} value - Texto a ser normalizado
+ * @returns {string} Texto normalizado
+ * @example
+ * const normalized = normalizeContent("  Hello\r\nWorld  ");
+ * // Returns: "Hello\nWorld"
  */
 export function normalizeContent(value: string): string {
   return value.replace(/\r\n?|\n/g, "\n").trim();
 }
 &nbsp;
 /**
- * Verifica se o conteúdo normalizado está vazio (incluindo nbsp)
+ * Verifica se o conteúdo normalizado está vazio
+ * Remove espaços não-quebráveis (nbsp) antes da verificação
+ * @function isContentEmpty
+ * @param {string} value - Texto a ser verificado
+ * @returns {boolean} True se o conteúdo estiver vazio
+ * @example
+ * isContentEmpty("   "); // true
+ * isContentEmpty("\u00a0"); // true (nbsp)
+ * isContentEmpty("Hello"); // false
  */
 export function isContentEmpty(value: string): boolean {
   return normalizeContent(value).replace(/\u00a0/g, "").trim().length === 0;
@@ -137,6 +198,14 @@ export function isContentEmpty(value: string): boolean {
 &nbsp;
 /**
  * Verifica se dois conteúdos são iguais após normalização
+ * Útil para comparar conteúdo do textarea com conteúdo do CKEditor
+ * @function contentEquals
+ * @param {string} a - Primeiro texto
+ * @param {string} b - Segundo texto
+ * @returns {boolean} True se os textos são iguais após normalização
+ * @example
+ * contentEquals("Hello\r\n", "Hello\n"); // true
+ * contentEquals("  Test  ", "Test"); // true
  */
 export function contentEquals(a: string, b: string): boolean {
   return normalizeContent(a) === normalizeContent(b);
@@ -148,7 +217,7 @@ export function contentEquals(a: string, b: string): boolean {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-22T01:01:41.655Z
+                at 2025-10-22T01:20:51.488Z
             </div>
         <script src="../prettify.js"></script>
         <script>

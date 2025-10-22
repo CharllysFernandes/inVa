@@ -11,7 +11,12 @@
         "typecheck": "tsc --noEmit",
         "test": "vitest",
         "test:ui": "vitest --ui",
-        "test:coverage": "vitest --coverage"
+        "test:coverage": "vitest --coverage",
+        "release": "standard-version",
+        "release:minor": "standard-version --release-as minor",
+        "release:major": "standard-version --release-as major",
+        "release:patch": "standard-version --release-as patch",
+        "release:first": "standard-version --first-release"
     },
     "keywords": [
         "chrome-extension",
@@ -29,6 +34,7 @@
         "happy-dom": "^20.0.8",
         "jsdom": "^27.0.1",
         "rimraf": "^5.0.5",
+        "standard-version": "^9.5.0",
         "ts-loader": "^9.5.1",
         "typescript": "^5.4.5",
         "vitest": "^3.2.4",

@@ -49,10 +49,28 @@ Extensão para Google Chrome e Microsoft Edge escrita em TypeScript cujo objetiv
 
 ## Scripts disponíveis
 
+### Build e Desenvolvimento
+
 - `npm run build`: gera uma versão otimizada para distribuição.
 - `npm run watch`: recompila automaticamente ao alterar os arquivos fonte.
-- `npm run typecheck`: executa o TypeScript apenas para verificação de tipos.
+- `npm run dev`: compila em modo desenvolvimento.
 - `npm run clean`: remove a pasta `dist/`.
+- `npm run typecheck`: executa o TypeScript apenas para verificação de tipos.
+
+### Testes
+
+- `npm test`: executa os testes em modo watch.
+- `npm run test:ui`: abre a interface visual do Vitest.
+- `npm run test:coverage`: gera relatório de cobertura de testes.
+
+### Versionamento
+
+- `npm run release`: cria uma nova versão automaticamente baseada nos commits.
+- `npm run release:patch`: cria uma versão patch (0.1.0 → 0.1.1).
+- `npm run release:minor`: cria uma versão minor (0.1.0 → 0.2.0).
+- `npm run release:major`: cria uma versão major (0.1.0 → 1.0.0).
+
+Para mais detalhes sobre versionamento, consulte [VERSIONING.md](./VERSIONING.md).
 
 ## Estrutura dos diretórios
 

@@ -1,18 +1,35 @@
 /**
  * Módulo de sincronização com CKEditor
- * Gerencia a aplicação de texto em editores iframe e inline
+ * Gerencia a aplicação de texto em editores iframe e inline com proteção contra loops
+ * @module editor-sync
  */
 
 import { SELECTORS, LIMITS } from "@shared/constants";
 import { normalizeContent, isContentEmpty } from "@shared/text-utils";
 import { logger } from "@shared/logger";
 
+/**
+ * Estado interno do gerenciador de sincronização
+ * @interface EditorState
+ * @property {string} lastSyncedText - Último texto sincronizado
+ * @property {boolean} enforcementActive - Se deve forçar o texto no editor
+ * @property {boolean} isProgrammaticSync - Flag para evitar loops de sincronização
+ */
 interface EditorState {
   lastSyncedText: string;
   enforcementActive: boolean;
   isProgrammaticSync: boolean;
 }
 
+/**
+ * Referências aos observadores de DOM ativos
+ * @interface ObserverRefs
+ * @property {MutationObserver|null} iframeMutation - Observer de mutações no iframe
+ * @property {MutationObserver|null} iframeAppearance - Observer de aparecimento do iframe
+ * @property {number|null} iframeStability - ID do intervalo de verificação de estabilidade
+ * @property {MutationObserver|null} inlineMutation - Observer de mutações no editor inline
+ * @property {MutationObserver|null} inlineAppearance - Observer de aparecimento do editor inline
+ */
 interface ObserverRefs {
   iframeMutation: MutationObserver | null;
   iframeAppearance: MutationObserver | null;
@@ -21,13 +38,28 @@ interface ObserverRefs {
   inlineAppearance: MutationObserver | null;
 }
 
+/**
+ * Gerenciador de sincronização com CKEditor
+ * Suporta tanto modo iframe quanto inline, com proteção contra loops de sincronização
+ * @class CKEditorSyncManager
+ */
 class CKEditorSyncManager {
+  /**
+   * Estado interno do sincronizador
+   * @private
+   * @type {EditorState}
+   */
   private state: EditorState = {
     lastSyncedText: "",
     enforcementActive: false,
     isProgrammaticSync: false
   };
 
+  /**
+   * Referências aos observadores de DOM
+   * @private
+   * @type {ObserverRefs}
+   */
   private observers: ObserverRefs = {
     iframeMutation: null,
     iframeAppearance: null,
@@ -38,6 +70,11 @@ class CKEditorSyncManager {
 
   /**
    * Sincroniza texto com ambos os modos de editor (iframe e inline)
+   * Ativa a proteção de conteúdo se o texto não estiver vazio
+   * @param {string} text - Texto a ser sincronizado
+   * @returns {void}
+   * @example
+   * editorSync.sync('Meu comentário importante');
    */
   sync(text: string): void {
     void logger.debug("content", "Syncing CKEditor content", { length: text.length });
@@ -48,7 +85,9 @@ class CKEditorSyncManager {
   }
 
   /**
-   * Limpa todos os observadores
+   * Limpa todos os observadores ativos
+   * Deve ser chamado ao desmontar o componente ou limpar recursos
+   * @returns {void}
    */
   cleanup(): void {
     this.observers.iframeMutation?.disconnect();
@@ -60,6 +99,12 @@ class CKEditorSyncManager {
     }
   }
 
+  /**
+   * Sincroniza com editor em modo iframe
+   * Aguarda o iframe estar pronto e inicia observadores
+   * @private
+   * @returns {void}
+   */
   private syncIframeEditor(): void {
     const iframe = document.querySelector<HTMLIFrameElement>(SELECTORS.IFRAME_EDITOR);
     if (iframe) {
@@ -79,6 +124,12 @@ class CKEditorSyncManager {
     }
   }
 
+  /**
+   * Sincroniza com editor em modo inline
+   * Aplica texto diretamente no elemento editável
+   * @private
+   * @returns {void}
+   */
   private syncInlineEditor(): void {
     const editable = document.querySelector<HTMLElement>(SELECTORS.INLINE_EDITOR);
     if (editable) {
@@ -94,6 +145,12 @@ class CKEditorSyncManager {
     }
   }
 
+  /**
+   * Aplica texto ao documento do iframe
+   * @private
+   * @param {HTMLIFrameElement} iframe - Elemento iframe do CKEditor
+   * @returns {boolean} True se o texto foi aplicado com sucesso
+   */
   private applyTextToIframe(iframe: HTMLIFrameElement): boolean {
     const doc = iframe.contentDocument;
     const body = doc?.body;
@@ -121,6 +178,12 @@ class CKEditorSyncManager {
     return normalizeContent(body.textContent ?? "") === target;
   }
 
+  /**
+   * Aplica texto ao editor inline
+   * @private
+   * @param {HTMLElement} editable - Elemento editável do CKEditor
+   * @returns {void}
+   */
   private applyTextToInline(editable: HTMLElement): void {
     const current = normalizeContent(editable.textContent ?? "");
     const target = normalizeContent(this.state.lastSyncedText);
@@ -142,6 +205,13 @@ class CKEditorSyncManager {
     }
   }
 
+  /**
+   * Inicia observadores de mutação para o iframe
+   * Protege o conteúdo contra remoções acidentais
+   * @private
+   * @param {HTMLIFrameElement} iframe - Elemento iframe do CKEditor
+   * @returns {void}
+   */
   private startIframeWatchers(iframe: HTMLIFrameElement): void {
     const doc = iframe.contentDocument;
     const body = doc?.body;
@@ -168,6 +238,13 @@ class CKEditorSyncManager {
     this.startStabilityChecker(iframe);
   }
 
+  /**
+   * Inicia verificador periódico de estabilidade do iframe
+   * Tenta aplicar o texto até que esteja estável ou timeout
+   * @private
+   * @param {HTMLIFrameElement} iframe - Elemento iframe do CKEditor
+   * @returns {void}
+   */
   private startStabilityChecker(iframe: HTMLIFrameElement): void {
     if (this.observers.iframeStability) {
       window.clearInterval(this.observers.iframeStability);
@@ -202,6 +279,12 @@ class CKEditorSyncManager {
     }, LIMITS.STABILITY_INTERVAL_MS);
   }
 
+  /**
+   * Inicia observadores de mutação para o editor inline
+   * @private
+   * @param {HTMLElement} editable - Elemento editável do CKEditor
+   * @returns {void}
+   */
   private startInlineWatchers(editable: HTMLElement): void {
     this.observers.inlineMutation?.disconnect();
     this.observers.inlineMutation = new MutationObserver(() => {
@@ -222,6 +305,12 @@ class CKEditorSyncManager {
     this.observers.inlineMutation.observe(editable, { childList: true, subtree: true, characterData: true });
   }
 
+  /**
+   * Verifica se o iframe tem foco atualmente
+   * @private
+   * @param {HTMLIFrameElement} iframe - Elemento iframe do CKEditor
+   * @returns {boolean} True se o iframe ou algum elemento dentro dele tem foco
+   */
   private iframeHasFocus(iframe: HTMLIFrameElement): boolean {
     const doc = iframe.contentDocument;
     const body = doc?.body;
@@ -230,11 +319,22 @@ class CKEditorSyncManager {
     return Boolean(active && body.contains(active));
   }
 
+  /**
+   * Verifica se o editor inline tem foco atualmente
+   * @private
+   * @param {HTMLElement} editable - Elemento editável do CKEditor
+   * @returns {boolean} True se o editor tem foco
+   */
   private inlineHasFocus(editable: HTMLElement): boolean {
     const active = document.activeElement;
     return Boolean(active && (active === editable || editable.contains(active)));
   }
 
+  /**
+   * Desconecta o observador de aparecimento do iframe
+   * @private
+   * @returns {void}
+   */
   private disconnectIframeAppearance(): void {
     if (this.observers.iframeAppearance) {
       this.observers.iframeAppearance.disconnect();
@@ -242,6 +342,11 @@ class CKEditorSyncManager {
     }
   }
 
+  /**
+   * Desconecta o observador de aparecimento do editor inline
+   * @private
+   * @returns {void}
+   */
   private disconnectInlineAppearance(): void {
     if (this.observers.inlineAppearance) {
       this.observers.inlineAppearance.disconnect();
@@ -250,4 +355,12 @@ class CKEditorSyncManager {
   }
 }
 
+/**
+ * Instância singleton do gerenciador de sincronização
+ * @constant
+ * @type {CKEditorSyncManager}
+ * @example
+ * import { editorSync } from './editor-sync';
+ * editorSync.sync('Novo conteúdo');
+ */
 export const editorSync = new CKEditorSyncManager();

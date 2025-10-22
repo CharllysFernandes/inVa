@@ -11,6 +11,9 @@ describe('comment-storage', () => {
     if (storageMock.local.clear) {
       storageMock.local.clear();
     }
+    
+    // Resetar rate limiters
+    commentStorage.resetRateLimiters();
   });
 
   describe('getKey', () => {
@@ -73,7 +76,9 @@ describe('comment-storage', () => {
       const key = 'inva_comments:test';
       
       await commentStorage.save(key, 'first value');
+      await new Promise(resolve => setTimeout(resolve, 15));
       await commentStorage.save(key, 'second value');
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       const result = await commentStorage.load(key);
       expect(result).toBe('second value');
@@ -161,21 +166,23 @@ describe('comment-storage', () => {
 
   describe('integração - fluxo completo', () => {
     it('deve suportar ciclo completo: save -> load -> remove', async () => {
-      const url = 'https://example.com/ticket/123';
-      const key = commentStorage.getKey(url);
-      const content = 'Comentário de teste completo';
-
-      // Salvar
-      await commentStorage.save(key, content);
+      const key = commentStorage.getKey('https://example.com/tickets/complete-flow');
+      const value = 'Complete workflow test';
       
-      // Carregar
+      // Save
+      await commentStorage.save(key, value);
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      // Load
       const loaded = await commentStorage.load(key);
-      expect(loaded).toBe(content);
-
-      // Remover
-      await commentStorage.remove(key, 'after-load');
+      expect(loaded).toBe(value);
+      await new Promise(resolve => setTimeout(resolve, 15));
       
-      // Verificar remoção
+      // Remove
+      await commentStorage.remove(key, 'manual-clear');
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      // Verificar se foi removido
       const afterRemove = await commentStorage.load(key);
       expect(afterRemove).toBe('');
     });
@@ -187,14 +194,20 @@ describe('comment-storage', () => {
       const key2 = commentStorage.getKey(url2);
 
       await commentStorage.save(key1, 'Comment 1');
+      await new Promise(resolve => setTimeout(resolve, 15));
       await commentStorage.save(key2, 'Comment 2');
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(await commentStorage.load(key1)).toBe('Comment 1');
+      await new Promise(resolve => setTimeout(resolve, 10));
       expect(await commentStorage.load(key2)).toBe('Comment 2');
+      await new Promise(resolve => setTimeout(resolve, 15));
 
       await commentStorage.remove(key1, 'manual-clear');
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(await commentStorage.load(key1)).toBe('');
+      await new Promise(resolve => setTimeout(resolve, 10));
       expect(await commentStorage.load(key2)).toBe('Comment 2');
     });
   });

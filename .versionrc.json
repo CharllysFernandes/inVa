@@ -1,0 +1,51 @@
+{
+    "header": "# Changelog\n\nTodas as mudanças notáveis neste projeto serão documentadas neste arquivo.\n\nO formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),\ne este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).\n",
+    "types": [
+        {
+            "type": "feat",
+            "section": "✨ Novos Recursos"
+        },
+        {
+            "type": "fix",
+            "section": "🐛 Correções de Bugs"
+        },
+        {
+            "type": "perf",
+            "section": "⚡ Melhorias de Performance"
+        },
+        {
+            "type": "refactor",
+            "section": "♻️ Refatorações"
+        },
+        {
+            "type": "docs",
+            "section": "📚 Documentação"
+        },
+        {
+            "type": "test",
+            "section": "✅ Testes"
+        },
+        {
+            "type": "build",
+            "section": "🔧 Build/CI"
+        },
+        {
+            "type": "chore",
+            "section": "🔨 Manutenção"
+        }
+    ],
+    "releaseCommitMessageFormat": "chore(release): {{currentTag}}",
+    "scripts": {
+        "postbump": "node scripts/sync-version.js"
+    },
+    "bumpFiles": [
+        {
+            "filename": "package.json",
+            "type": "json"
+        },
+        {
+            "filename": "manifest.json",
+            "type": "json"
+        }
+    ]
+}

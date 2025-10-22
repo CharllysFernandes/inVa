@@ -1,9 +1,21 @@
 /**
  * Utilitários de manipulação de DOM
+ * @module dom-utils
  */
 
 /**
  * Aguarda o elemento aparecer no DOM usando MutationObserver
+ * Retorna imediatamente se o elemento já existir
+ * @template T - Tipo do elemento HTML esperado
+ * @function waitForElement
+ * @param {string} selector - Seletor CSS do elemento
+ * @param {number} [timeout=10000] - Timeout em milissegundos
+ * @returns {Promise<T|null>} Elemento encontrado ou null se timeout
+ * @example
+ * const button = await waitForElement<HTMLButtonElement>('#submit-btn', 5000);
+ * if (button) {
+ *   button.click();
+ * }
  */
 export function waitForElement<T extends Element>(
   selector: string,
@@ -34,7 +46,13 @@ export function waitForElement<T extends Element>(
 }
 
 /**
- * Aguarda o DOM estar pronto
+ * Aguarda o DOM estar completamente pronto (DOMContentLoaded)
+ * Retorna imediatamente se o DOM já estiver pronto
+ * @function waitForDOMReady
+ * @returns {Promise<void>}
+ * @example
+ * await waitForDOMReady();
+ * console.log('DOM está pronto!');
  */
 export function waitForDOMReady(): Promise<void> {
   if (document.readyState !== "loading") {
@@ -46,7 +64,18 @@ export function waitForDOMReady(): Promise<void> {
 }
 
 /**
- * Cria um debouncer genérico
+ * Cria uma função com debounce que atrasa a execução
+ * Útil para limitar chamadas em eventos de alta frequência (input, scroll, etc)
+ * @template T - Tipo da função a ser debounced
+ * @function debounce
+ * @param {T} fn - Função a ser executada com delay
+ * @param {number} wait - Tempo de espera em milissegundos
+ * @returns {Function} Função debounced
+ * @example
+ * const saveData = debounce(() => {
+ *   console.log('Salvando...');
+ * }, 300);
+ * input.addEventListener('input', saveData);
  */
 export function debounce<T extends (...args: unknown[]) => void>(
   fn: T,

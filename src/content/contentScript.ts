@@ -1,5 +1,11 @@
 /// <reference types="chrome" />
 
+/**
+ * Content script principal da extensão
+ * Gerencia injeção do formulário, persistência e sincronização com CKEditor
+ * @module contentScript
+ */
+
 import { getStoredCreateTicketUrl } from "@shared/utils";
 import { logger } from "@shared/logger";
 import { createCommentForm } from "@shared/elemento";
@@ -10,13 +16,26 @@ import { waitForDOMReady, debounce, waitForElement } from "@shared/dom-utils";
 import { editorSync } from "@content/editor-sync";
 import type { StorageClearReason } from "@shared/types";
 
+/**
+ * Conjunto de elementos de submit já configurados para evitar duplicação
+ * @type {WeakSet<Element>}
+ */
 const wiredSubmitElements = new WeakSet<Element>();
-const wiredSubmitForms = new WeakSet<HTMLFormElement>();
-
-
 
 /**
- * Limpa o comentário armazenado e o CKEditor
+ * Conjunto de formulários já configurados para evitar duplicação
+ * @type {WeakSet<HTMLFormElement>}
+ */
+const wiredSubmitForms = new WeakSet<HTMLFormElement>();
+
+/**
+ * Limpa o comentário armazenado e sincroniza com o CKEditor
+ * @async
+ * @function clearComment
+ * @param {string} storageKey - Chave de storage do comentário
+ * @param {HTMLTextAreaElement} textarea - Textarea a ser limpo
+ * @param {StorageClearReason} reason - Razão da limpeza
+ * @returns {Promise<void>}
  */
 async function clearComment(storageKey: string, textarea: HTMLTextAreaElement, reason: StorageClearReason): Promise<void> {
   const previousValue = textarea.value;
@@ -28,7 +47,13 @@ async function clearComment(storageKey: string, textarea: HTMLTextAreaElement, r
 }
 
 /**
- * Registra listeners de submit para limpar comentários
+ * Registra listeners de submit para limpar comentários automaticamente
+ * Anexa eventos ao botão de submit e ao formulário
+ * @async
+ * @function registerSubmitHandlers
+ * @param {string} storageKey - Chave de storage do comentário
+ * @param {HTMLTextAreaElement} textarea - Textarea a ser monitorado
+ * @returns {Promise<void>}
  */
 async function registerSubmitHandlers(storageKey: string, textarea: HTMLTextAreaElement): Promise<void> {
   // Tenta anexar ao botão de submit
@@ -49,6 +74,11 @@ async function registerSubmitHandlers(storageKey: string, textarea: HTMLTextArea
 }
 /**
  * Verifica se a URL atual corresponde à URL salva
+ * Compara origin e pathname para determinar se deve injetar o formulário
+ * @function matchesUrl
+ * @param {string} savedUrl - URL salva pelo usuário
+ * @param {string} currentUrl - URL atual da página
+ * @returns {boolean} True se as URLs correspondem
  */
 function matchesUrl(savedUrl: string, currentUrl: string): boolean {
   try {
@@ -62,6 +92,12 @@ function matchesUrl(savedUrl: string, currentUrl: string): boolean {
 
 /**
  * Configura o textarea com persistência e sincronização
+ * Carrega valor salvo, configura auto-save com debounce e sincroniza com CKEditor
+ * @async
+ * @function setupTextarea
+ * @param {HTMLTextAreaElement} textarea - Textarea a ser configurado
+ * @param {string} storageKey - Chave de storage para persistência
+ * @returns {Promise<void>}
  */
 async function setupTextarea(textarea: HTMLTextAreaElement, storageKey: string): Promise<void> {
   // Carrega valor salvo
@@ -94,7 +130,6 @@ async function setupTextarea(textarea: HTMLTextAreaElement, storageKey: string):
 
   const debouncedSave = debounce(() => void saveComment("input"), LIMITS.DEBOUNCE_INPUT_MS);
 
-  // Event handlers
   textarea.addEventListener("input", () => {
     editorSync.sync(textarea.value);
     debouncedSave();
@@ -126,8 +161,12 @@ async function setupTextarea(textarea: HTMLTextAreaElement, storageKey: string):
 }
 
 /**
- * Injeta o elemento no container e configura funcionalidades
+ * Injeta o formulário no container da página
  * Usa criação programática de elementos para maior type-safety
+ * @async
+ * @function injectElement
+ * @param {string} savedUrl - URL salva para gerar chave de storage
+ * @returns {Promise<boolean>} True se injetado com sucesso
  */
 async function injectElement(savedUrl: string): Promise<boolean> {
   const container = await waitForElement<HTMLDivElement>(SELECTORS.CONTAINER, LIMITS.DOM_OBSERVER_TIMEOUT_MS);
@@ -140,12 +179,10 @@ async function injectElement(savedUrl: string): Promise<boolean> {
   // Criação programática de elementos (type-safe e segura)
   const elements = createCommentForm();
   wrapper.appendChild(elements.form);
-  
-  const textarea = elements.textarea;
-  
   container.insertBefore(wrapper, container.firstChild);
   void logger.info("content", "Injected comment panel (programmatic) into container");
 
+  const textarea = elements.textarea;
   if (!textarea) {
     void logger.warn("content", "Textarea not found in injected wrapper");
     return true;

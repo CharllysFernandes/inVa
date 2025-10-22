@@ -1,9 +1,18 @@
 /// <reference types="chrome" />
 
+/**
+ * Script do popup da extensão
+ * Gerencia configuração de URL, debug mode e visualização de logs
+ * @module popup
+ */
+
 import { getStoredCreateTicketUrl, saveCreateTicketUrl } from "@shared/utils";
 import { debugAPI, logger } from "@shared/logger";
 import { LIMITS } from "@shared/constants";
 
+/**
+ * Referências aos elementos do DOM do popup
+ */
 const urlInput = document.getElementById("createTicketUrl") as HTMLInputElement | null;
 const saveButton = document.getElementById("saveCreateTicketUrl");
 const saveStatus = document.getElementById("saveStatus") as HTMLParagraphElement | null;
@@ -13,7 +22,9 @@ const clearLogsBtn = document.getElementById("clearLogs");
 const logsOutput = document.getElementById("logsOutput") as HTMLPreElement | null;
 const appVersionLabel = document.getElementById("appVersion");
 
-// Apresenta versão da extensão no cabeçalho
+/**
+ * Apresenta versão da extensão no cabeçalho do popup
+ */
 try {
   const manifest = chrome.runtime.getManifest();
   const version = manifest.version_name ?? manifest.version;
@@ -26,7 +37,10 @@ try {
   }
 }
 
-// Carrega URL salva ao abrir popup
+/**
+ * Carrega URL salva e estado do debug ao abrir popup
+ * @async
+ */
 (async () => {
   try {
     const saved = await getStoredCreateTicketUrl();
@@ -43,7 +57,10 @@ try {
   }
 })();
 
-// Salvar URL
+/**
+ * Event listener para salvar URL de criação de ticket
+ * Adiciona protocolo https:// se não fornecido
+ */
 if (saveButton) {
   saveButton.addEventListener("click", async () => {
     const value = urlInput?.value.trim() ?? "";
@@ -77,13 +94,19 @@ if (saveButton) {
   });
 }
 
-// Toggle debug
+/**
+ * Event listener para alternar modo debug
+ * Habilita/desabilita logs detalhados
+ */
 debugEnabledCheckbox?.addEventListener("change", async () => {
   await debugAPI.setDebugEnabled(Boolean(debugEnabledCheckbox?.checked));
   void logger.info("popup", "Debug toggled", { enabled: debugEnabledCheckbox?.checked });
 });
 
-// Ver logs
+/**
+ * Event listener para visualizar logs armazenados
+ * Exibe logs formatados no popup
+ */
 viewLogsBtn?.addEventListener("click", async () => {
   void logger.debug("popup", "View logs requested");
   const logs = await debugAPI.getLogs();
@@ -95,7 +118,10 @@ viewLogsBtn?.addEventListener("click", async () => {
   }
 });
 
-// Limpar logs
+/**
+ * Event listener para limpar todos os logs armazenados
+ * Remove logs do storage e limpa visualização
+ */
 clearLogsBtn?.addEventListener("click", async () => {
   void logger.debug("popup", "Clearing persisted logs");
   await debugAPI.clearLogs();
