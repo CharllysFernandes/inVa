@@ -62,6 +62,7 @@ Extensão para Google Chrome e Microsoft Edge escrita em TypeScript cujo objetiv
 - `npm test`: executa os testes em modo watch.
 - `npm run test:ui`: abre a interface visual do Vitest.
 - `npm run test:coverage`: gera relatório de cobertura de testes.
+- `npm run test:security`: valida Content Security Policy e práticas de segurança.
 
 ### Versionamento
 
@@ -108,6 +109,37 @@ O projeto foi organizado seguindo princípios SOLID e boas práticas TypeScript:
 - **Manager classes**: `CKEditorSyncManager` e `CommentStorageManager` encapsulam estado e lógica complexa
 - **Factory functions**: `createCommentForm()` cria elementos programaticamente com type-safety
 - **CSS modular**: estilos encapsulados com prefixo `inva-` evitam conflitos
+
+## 🔒 Segurança
+
+A extensão implementa uma **Content Security Policy (CSP) rigorosa** para proteção contra:
+
+- ✅ **Cross-Site Scripting (XSS)**: Bloqueia execução de scripts não autorizados
+- ✅ **Code Injection**: Previne `eval()` e `new Function()`
+- ✅ **Clickjacking**: Impede incorporação em iframes maliciosos
+- ✅ **Data Exfiltration**: Restringe conexões a domínios externos
+- ✅ **Plugins maliciosos**: Bloqueia Flash, Java e outros plugins
+
+### Políticas implementadas
+
+```json
+{
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests;"
+  }
+}
+```
+
+Além disso, o código segue práticas seguras:
+
+- ❌ Sem scripts inline no HTML
+- ❌ Sem event handlers inline (`onclick`, etc.)
+- ❌ Sem uso de `eval()` ou `new Function()`
+- ✅ Event listeners via `addEventListener()`
+- ✅ Uso de `textContent` ao invés de `innerHTML` com dados não confiáveis
+- ✅ Validação de entradas do usuário
+
+Para mais detalhes, consulte [docs/CONTENT_SECURITY_POLICY.md](./docs/CONTENT_SECURITY_POLICY.md).
 
 ## Próximos passos sugeridos
 
