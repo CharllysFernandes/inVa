@@ -4,7 +4,6 @@ import { ELEMENT_IDS, CSS_CLASSES } from "./constants";
  * Configuração do formulário de comentário
  */
 export interface CommentFormConfig {
-  withClearButton?: boolean;
   placeholder?: string;
   rows?: number;
 }
@@ -15,11 +14,9 @@ export interface CommentFormConfig {
 export interface CommentFormElements {
   form: HTMLFormElement;
   textarea: HTMLTextAreaElement;
-  clearButton?: HTMLButtonElement;
 }
 
 const DEFAULT_CONFIG: Required<CommentFormConfig> = {
-  withClearButton: false,
   placeholder: "Digite sua anotação aqui...",
   rows: 4
 };
@@ -59,19 +56,6 @@ export function injectCommentFormStyles(): void {
       box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
     }
     .inva-comment-textarea::placeholder { color: #9e9e9e; opacity: 0.7; }
-    .inva-clear-button {
-      border: none;
-      background: transparent;
-      color: #b91c1c;
-      font-weight: 700;
-      cursor: pointer;
-      padding: 4px 8px;
-      font-size: 16px;
-      border-radius: 4px;
-      transition: background-color 0.2s ease;
-    }
-    .inva-clear-button:hover { background: rgba(185, 28, 28, 0.1); }
-    .inva-clear-button:focus { outline: 2px solid #b91c1c; outline-offset: 2px; }
   `;
   document.head.appendChild(style);
 }
@@ -101,18 +85,6 @@ export function createCommentForm(config: CommentFormConfig = {}): CommentFormEl
   titleSpan.textContent = "Anotação do chamado:";
   header.appendChild(titleSpan);
 
-  let clearButton: HTMLButtonElement | undefined;
-  if (finalConfig.withClearButton) {
-    clearButton = document.createElement("button");
-    clearButton.type = "button";
-    clearButton.className = CSS_CLASSES.CLEAR_BUTTON;
-    clearButton.id = ELEMENT_IDS.CLEAR_BUTTON;
-    clearButton.textContent = "×";
-    clearButton.setAttribute("title", "Limpar anotação");
-    clearButton.setAttribute("aria-label", "Limpar anotação");
-    header.appendChild(clearButton);
-  }
-
   // Textarea para comentários
   const textarea = document.createElement("textarea");
   textarea.className = `inputBasic ${CSS_CLASSES.COMMENT_TEXTAREA}`;
@@ -126,7 +98,6 @@ export function createCommentForm(config: CommentFormConfig = {}): CommentFormEl
 
   return {
     form,
-    textarea,
-    clearButton
+    textarea
   };
 }

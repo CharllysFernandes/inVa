@@ -1,14 +1,14 @@
 /// <reference types="chrome" />
 
-import { getStoredCreateTicketUrl } from "../shared/utils";
-import { logger } from "../shared/logger";
-import { createCommentForm } from "../shared/elemento";
-import { SELECTORS, WRAPPER_ID, LIMITS } from "../shared/constants";
-import { commentStorage } from "../shared/comment-storage";
-import { isContentEmpty } from "../shared/text-utils";
-import { waitForDOMReady, debounce, waitForElement } from "../shared/dom-utils";
-import { editorSync } from "./editor-sync";
-import type { StorageClearReason } from "../shared/types";
+import { getStoredCreateTicketUrl } from "@shared/utils";
+import { logger } from "@shared/logger";
+import { createCommentForm } from "@shared/elemento";
+import { SELECTORS, WRAPPER_ID, LIMITS } from "@shared/constants";
+import { commentStorage } from "@shared/comment-storage";
+import { isContentEmpty } from "@shared/text-utils";
+import { waitForDOMReady, debounce, waitForElement } from "@shared/dom-utils";
+import { editorSync } from "@content/editor-sync";
+import type { StorageClearReason } from "@shared/types";
 
 const wiredSubmitElements = new WeakSet<Element>();
 const wiredSubmitForms = new WeakSet<HTMLFormElement>();
@@ -138,11 +138,10 @@ async function injectElement(savedUrl: string): Promise<boolean> {
   wrapper.id = WRAPPER_ID;
 
   // Criação programática de elementos (type-safe e segura)
-  const elements = createCommentForm({ withClearButton: true });
+  const elements = createCommentForm();
   wrapper.appendChild(elements.form);
   
   const textarea = elements.textarea;
-  const clearButton = elements.clearButton ?? null;
   
   container.insertBefore(wrapper, container.firstChild);
   void logger.info("content", "Injected comment panel (programmatic) into container");
@@ -155,12 +154,6 @@ async function injectElement(savedUrl: string): Promise<boolean> {
   const storageKey = commentStorage.getKey(savedUrl);
   await setupTextarea(textarea, storageKey);
   await registerSubmitHandlers(storageKey, textarea);
-
-  // Botão de limpar manual
-  if (clearButton) {
-    clearButton.addEventListener("click", () => void clearComment(storageKey, textarea, "manual-clear"));
-    void logger.debug("content", "Attached clear button listener");
-  }
 
   return true;
 }

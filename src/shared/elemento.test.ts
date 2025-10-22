@@ -35,7 +35,6 @@ describe('elemento', () => {
       expect(content).toContain('.inva-comment-form');
       expect(content).toContain('.inva-comment-header');
       expect(content).toContain('.inva-comment-textarea');
-      expect(content).toContain('.inva-clear-button');
     });
   });
 
@@ -76,22 +75,6 @@ describe('elemento', () => {
 
       expect(elements.textarea.getAttribute('rows')).toBe('4');
       expect(elements.textarea.getAttribute('placeholder')).toBe('Digite sua anotação aqui...');
-      expect(elements.clearButton).toBeUndefined();
-    });
-
-    it('deve criar botão de limpar quando configurado', () => {
-      const elements = createCommentForm({ withClearButton: true });
-
-      expect(elements.clearButton).toBeInstanceOf(HTMLButtonElement);
-      expect(elements.clearButton?.type).toBe('button');
-      expect(elements.clearButton?.id).toBe(ELEMENT_IDS.CLEAR_BUTTON);
-      expect(elements.clearButton?.textContent).toBe('×');
-    });
-
-    it('não deve criar botão de limpar por padrão', () => {
-      const elements = createCommentForm();
-
-      expect(elements.clearButton).toBeUndefined();
     });
 
     it('deve aplicar placeholder personalizado', () => {
@@ -109,12 +92,10 @@ describe('elemento', () => {
 
     it('deve combinar múltiplas configurações', () => {
       const elements = createCommentForm({
-        withClearButton: true,
         placeholder: 'Custom placeholder',
         rows: 6
       });
 
-      expect(elements.clearButton).toBeInstanceOf(HTMLButtonElement);
       expect(elements.textarea.getAttribute('placeholder')).toBe('Custom placeholder');
       expect(elements.textarea.getAttribute('rows')).toBe('6');
     });
@@ -128,7 +109,7 @@ describe('elemento', () => {
     });
 
     it('deve ter estrutura DOM correta', () => {
-      const elements = createCommentForm({ withClearButton: true });
+      const elements = createCommentForm();
 
       // Form deve ter 2 filhos: header e textarea
       expect(elements.form.children.length).toBe(2);
@@ -147,13 +128,6 @@ describe('elemento', () => {
       expect(styleElement).not.toBeNull();
     });
 
-    it('botão de limpar deve ter atributos de acessibilidade', () => {
-      const elements = createCommentForm({ withClearButton: true });
-
-      expect(elements.clearButton?.getAttribute('title')).toBe('Limpar anotação');
-      expect(elements.clearButton?.getAttribute('aria-label')).toBe('Limpar anotação');
-    });
-
     it('header deve ter atributos de role apropriados', () => {
       const elements = createCommentForm();
 
@@ -162,33 +136,22 @@ describe('elemento', () => {
       expect(header?.getAttribute('aria-level')).toBe('1');
     });
 
-    it('botão de limpar deve ter classe CSS correta', () => {
-      const elements = createCommentForm({ withClearButton: true });
-
-      expect(elements.clearButton?.className).toContain(CSS_CLASSES.CLEAR_BUTTON);
-    });
-
     it('deve criar múltiplos formulários independentes', () => {
       const form1 = createCommentForm();
-      const form2 = createCommentForm({ withClearButton: true });
+      const form2 = createCommentForm();
 
       expect(form1.form).not.toBe(form2.form);
       expect(form1.textarea).not.toBe(form2.textarea);
-      expect(form1.clearButton).toBeUndefined();
-      expect(form2.clearButton).toBeInstanceOf(HTMLButtonElement);
     });
   });
 
   describe('integração - uso no DOM', () => {
     it('deve funcionar quando anexado ao documento', () => {
-      const elements = createCommentForm({ withClearButton: true });
+      const elements = createCommentForm();
       document.body.appendChild(elements.form);
 
       const formInDom = document.querySelector(`#${ELEMENT_IDS.COMMENTS_TEXTAREA}`);
       expect(formInDom).toBe(elements.textarea);
-
-      const buttonInDom = document.querySelector(`#${ELEMENT_IDS.CLEAR_BUTTON}`);
-      expect(buttonInDom).toBe(elements.clearButton);
     });
 
     it('textarea deve ser editável', () => {

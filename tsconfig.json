@@ -11,7 +11,12 @@
     "skipLibCheck": true,
     "noEmitOnError": true,
     "sourceMap": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["src/shared/*"],
+      "@content/*": ["src/content/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

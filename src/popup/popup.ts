@@ -1,8 +1,8 @@
 /// <reference types="chrome" />
 
-import { getStoredCreateTicketUrl, saveCreateTicketUrl } from "../shared/utils";
-import { debugAPI, logger } from "../shared/logger";
-import { LIMITS } from "../shared/constants";
+import { getStoredCreateTicketUrl, saveCreateTicketUrl } from "@shared/utils";
+import { debugAPI, logger } from "@shared/logger";
+import { LIMITS } from "@shared/constants";
 
 const urlInput = document.getElementById("createTicketUrl") as HTMLInputElement | null;
 const saveButton = document.getElementById("saveCreateTicketUrl");

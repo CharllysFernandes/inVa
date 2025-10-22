@@ -3,9 +3,9 @@
  * Gerencia a aplicação de texto em editores iframe e inline
  */
 
-import { SELECTORS, LIMITS } from "../shared/constants";
-import { normalizeContent, isContentEmpty } from "../shared/text-utils";
-import { logger } from "../shared/logger";
+import { SELECTORS, LIMITS } from "@shared/constants";
+import { normalizeContent, isContentEmpty } from "@shared/text-utils";
+import { logger } from "@shared/logger";
 
 interface EditorState {
   lastSyncedText: string;

@@ -14,21 +14,22 @@ export const SELECTORS = {
   CONTAINER: ".category_step1, #category_step1, div.category_step1, div#category_step1",
   IFRAME_EDITOR: ".cke_wysiwyg_frame",
   INLINE_EDITOR: ".cke_editable",
-  TEXTAREA: "#comments",
-  CLEAR_BUTTON: "#clearCommentButton"
+  TEXTAREA: "#comments"
 } as const;
 
 export const ELEMENT_IDS = {
   COMMENTS_TEXTAREA: "comments",
-  CLEAR_BUTTON: "clearCommentButton",
-  FORM_STYLES: "inva-comment-form-styles"
+  FORM_STYLES: "inva-comment-form-styles",
+  VALIDATION_MESSAGE: "inva-validation-message",
+  CHAR_COUNTER: "inva-char-counter"
 } as const;
 
 export const CSS_CLASSES = {
   COMMENT_FORM: "inva-comment-form",
   COMMENT_HEADER: "inva-comment-header",
   COMMENT_TEXTAREA: "inva-comment-textarea",
-  CLEAR_BUTTON: "inva-clear-button"
+  VALIDATION_ERROR: "inva-validation-error",
+  CHAR_COUNTER: "inva-char-counter"
 } as const;
 
 export const LIMITS = {
@@ -38,7 +39,9 @@ export const LIMITS = {
   STABILITY_REQUIRED_MATCHES: 4,
   DOM_OBSERVER_TIMEOUT_MS: 10000,
   DEBOUNCE_INPUT_MS: 600,
-  STATUS_MESSAGE_DURATION_MS: 1500
+  STATUS_MESSAGE_DURATION_MS: 1500,
+  MIN_COMMENT_LENGTH: 3,
+  MAX_COMMENT_LENGTH: 5000
 } as const;
 
 export const WRAPPER_ID = "inva-elemento-wrapper" as const;
