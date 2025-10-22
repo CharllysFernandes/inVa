@@ -27,12 +27,17 @@ Uma **Content Security Policy (CSP)** rigorosa foi implementada para proteger a 
                img-src 'self' data:; 
                font-src 'self'; 
                connect-src 'self'; 
-               object-src 'none'; 
-               base-uri 'none'; 
-               form-action 'none'; 
-               frame-ancestors 'none';"
+               object-src 'none';"
 />
 ```
+
+**⚠️ Nota importante**: Algumas diretivas CSP **não funcionam** em meta tags e devem ser configuradas apenas no manifest.json:
+
+- `frame-ancestors` - Ignorada em meta tags (usar apenas no manifest)
+- `report-uri` / `report-to` - Ignoradas em meta tags
+- `sandbox` - Ignorada em meta tags
+
+Estas diretivas estão configuradas no `manifest.json` onde são efetivas.
 
 ## 🛡️ Diretivas Explicadas
 
@@ -47,7 +52,7 @@ Uma **Content Security Policy (CSP)** rigorosa foi implementada para proteger a 
 | **form-action**               | `'none'` | Restringe submissão de formulários                  |
 | **upgrade-insecure-requests** | -        | Força HTTPS em requisições                          |
 
-### Diretivas HTML Adicionais
+### Diretivas HTML Adicionais (Meta Tag)
 
 | Diretiva        | Valor                    | Propósito                          |
 | --------------- | ------------------------ | ---------------------------------- |
@@ -56,6 +61,8 @@ Uma **Content Security Policy (CSP)** rigorosa foi implementada para proteger a 
 | **img-src**     | `'self' data:`           | Permite imagens locais e data URIs |
 | **font-src**    | `'self'`                 | Permite fontes apenas da extensão  |
 | **connect-src** | `'self'`                 | Restringe conexões XHR/fetch       |
+
+**Nota**: `frame-ancestors`, `base-uri` e `form-action` estão no manifest.json pois não funcionam em meta tags.
 
 ## 🚫 O que é Bloqueado
 
@@ -145,12 +152,14 @@ npm install library
 - Aplicado automaticamente pelo Chrome
 - Controla todas as páginas da extensão
 - Não pode ser desabilitado
+- **Suporta todas as diretivas CSP**, incluindo `frame-ancestors`, `base-uri`, `form-action`
 
 ### Nível 2: Meta Tag CSP (Defesa em Profundidade)
 
 - Adicionado em `popup.html`
 - Reforça as políticas do manifest
 - Proteção adicional contra bypass
+- **⚠️ Limitação**: Algumas diretivas são ignoradas em meta tags (ver abaixo)
 
 ### Nível 3: Código Seguro (Responsabilidade do Desenvolvedor)
 
@@ -158,6 +167,21 @@ npm install library
 - Sanitização de dados
 - Escape de HTML
 - Uso de `textContent` ao invés de `innerHTML`
+
+## ⚠️ Limitações de CSP em Meta Tags
+
+Segundo a especificação CSP, as seguintes diretivas **são ignoradas** quando entregues via `<meta>` tag:
+
+| Diretiva          | Status      | Motivo                      |
+| ----------------- | ----------- | --------------------------- |
+| `frame-ancestors` | ❌ Ignorada | Só funciona em HTTP headers |
+| `report-uri`      | ❌ Ignorada | Só funciona em HTTP headers |
+| `report-to`       | ❌ Ignorada | Só funciona em HTTP headers |
+| `sandbox`         | ❌ Ignorada | Só funciona em HTTP headers |
+
+**Por isso, essas diretivas estão configuradas apenas no `manifest.json`**, onde são totalmente efetivas em extensões Chrome.
+
+**Referência**: [MDN - CSP: meta element](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy#csp_in_html_meta_elements)
 
 ## 🛠️ Verificação de Conformidade
 
