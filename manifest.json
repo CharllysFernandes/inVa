@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "inVa",
     "description": "Extensão básica em TypeScript para destacar conteúdo em páginas da web.",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "icons": {
         "16": "Logo.png",
         "32": "Logo.png",
@@ -41,5 +41,8 @@
             "run_at": "document_idle",
             "all_frames": true
         }
-    ]
+    ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests;"
+    }
 }

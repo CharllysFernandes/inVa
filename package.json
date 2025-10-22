@@ -1,6 +1,6 @@
 {
     "name": "inva",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Extensão em TypeScript para destacar conteúdo em páginas da web.",
     "main": "dist/background.js",
     "scripts": {
@@ -12,6 +12,7 @@
         "test": "vitest",
         "test:ui": "vitest --ui",
         "test:coverage": "vitest --coverage",
+        "test:security": "node scripts/validate-csp.js",
         "release": "standard-version",
         "release:minor": "standard-version --release-as minor",
         "release:major": "standard-version --release-as major",
