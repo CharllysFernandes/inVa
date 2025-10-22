@@ -1,6 +1,6 @@
 {
     "name": "inva",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "description": "Extensão em TypeScript para destacar conteúdo em páginas da web.",
     "main": "dist/background.js",
     "scripts": {

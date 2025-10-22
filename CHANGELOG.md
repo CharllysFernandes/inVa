@@ -5,6 +5,14 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+### [0.1.3](https://github.com/CharllysFernandes/inVa/compare/v0.1.2...v0.1.3) (2025-10-22)
+
+
+### ✨ Novos Recursos
+
+* adicionar checklist de segurança abrangente e práticas recomendadas ([32dc5b7](https://github.com/CharllysFernandes/inVa/commit/32dc5b7475de708fe2a8269300b696510ec38d1d))
+* adicionar validação da Content Security Policy e documentação de segurança ([3bdbdd7](https://github.com/CharllysFernandes/inVa/commit/3bdbdd7dd3928c146742c140a087e83714de00fb))
+
 ### [0.1.2](https://github.com/CharllysFernandes/inVa/compare/v0.1.1...v0.1.2) (2025-10-22)
 
 ### 0.1.1 (2025-10-22)
