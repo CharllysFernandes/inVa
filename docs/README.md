@@ -13,8 +13,9 @@ Esta pasta contém toda a documentação técnica do projeto.
 
 - **[TESTING.md](./TESTING.md)** - Guia completo de testes unitários e cobertura
 
-### 🚀 Release e Versionamento
+### 🚀 Build, Release e Versionamento
 
+- **[BUILD_AND_RELEASE.md](./BUILD_AND_RELEASE.md)** - Guia completo de build e release para GitHub
 - **[VERSIONING.md](./VERSIONING.md)** - Guia completo de versionamento automático com conventional commits
 - **[RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)** - Checklist completo para releases
 
@@ -27,6 +28,7 @@ Cada documento foi criado com um propósito específico:
 | `CONTENT_SECURITY_POLICY.md` | Entender e manter a CSP da extensão          | Ao adicionar scripts ou recursos |
 | `SECURITY_CHECKLIST.md`      | Garantir práticas de código seguro           | Antes de commits e code reviews  |
 | `TESTING.md`                 | Criar e executar testes                      | Ao adicionar funcionalidades     |
+| `BUILD_AND_RELEASE.md`       | Build e publicação no GitHub                 | Ao criar releases                |
 | `VERSIONING.md`              | Criar releases e seguir conventional commits | Ao fazer commits e releases      |
 | `RELEASE_CHECKLIST.md`       | Processo completo de release                 | Antes e durante cada release     |
 
@@ -41,8 +43,9 @@ Cada documento foi criado com um propósito específico:
 
 ### Você quer fazer um release?
 
-1. Siga [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) - Checklist completo
-2. Use [VERSIONING.md](./VERSIONING.md) - Comandos de release
+1. Siga [BUILD_AND_RELEASE.md](./BUILD_AND_RELEASE.md) - Guia completo de build
+2. Use [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) - Checklist completo
+3. Consulte [VERSIONING.md](./VERSIONING.md) - Comandos de release
 
 ### Você encontrou um problema de segurança?
 
