@@ -59,7 +59,15 @@ Cada documento foi criado com um propósito específico:
 
 ## 📖 Documentação Externa
 
-A documentação principal do usuário está em:
+### Wiki do Projeto (Para Usuários)
+
+- **[Wiki no GitHub](https://github.com/CharllysFernandes/inVa/wiki)** - Documentação completa para usuários
+  - [Instalação](https://github.com/CharllysFernandes/inVa/wiki/Instalação)
+  - [Como Usar](https://github.com/CharllysFernandes/inVa/wiki/Como-Usar)
+  - [FAQ](https://github.com/CharllysFernandes/inVa/wiki/FAQ)
+- **[WIKI.md](./WIKI.md)** - Guia de manutenção da Wiki
+
+### Documentação do Projeto
 
 - **[README.md](../README.md)** - Raiz do projeto, guia de instalação e uso
 
