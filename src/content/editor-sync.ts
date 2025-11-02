@@ -9,6 +9,35 @@ import { normalizeContent, isContentEmpty } from "@shared/text-utils";
 import { logger } from "@shared/logger";
 
 /**
+ * Converte texto com quebras de linha em HTML formatado para CKEditor
+ * Preserva parágrafos e quebras de linha
+ * @param {string} text - Texto com quebras de linha (\n)
+ * @returns {string} HTML formatado com tags <p> e <br>
+ * @example
+ * textToHtml("Linha 1\nLinha 2\n\nParágrafo 2")
+ * // Returns: "<p>Linha 1<br>Linha 2</p><p>Parágrafo 2</p>"
+ */
+export function textToHtml(text: string): string {
+  if (!text) return "<p><br></p>";
+  
+  // Divide por blocos de parágrafos (dupla quebra de linha)
+  const paragraphs = text.split(/\n\n+/);
+  
+  const htmlParagraphs = paragraphs.map(paragraph => {
+    // Dentro de cada parágrafo, substitui quebras simples por <br>
+    const lines = paragraph.split('\n');
+    const htmlLines = lines
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .join('<br>');
+    
+    return htmlLines ? `<p>${htmlLines}</p>` : '';
+  }).filter(p => p.length > 0);
+  
+  return htmlParagraphs.length > 0 ? htmlParagraphs.join('') : '<p><br></p>';
+}
+
+/**
  * Estado interno do gerenciador de sincronização
  * @interface EditorState
  * @property {string} lastSyncedText - Último texto sincronizado
@@ -161,16 +190,16 @@ class CKEditorSyncManager {
 
     if (current === target) return true;
 
-    let paragraph = body.querySelector<HTMLParagraphElement>("p");
-    if (!paragraph) {
-      paragraph = doc.createElement("p");
-      body.innerHTML = "";
-      body.appendChild(paragraph);
-    }
-
     this.state.isProgrammaticSync = true;
     try {
-      paragraph.textContent = this.state.lastSyncedText;
+      // Converte texto com quebras de linha em HTML formatado
+      const htmlContent = textToHtml(this.state.lastSyncedText);
+      body.innerHTML = htmlContent;
+      
+      void logger.debug("content", "Applied HTML to iframe", {
+        textLength: this.state.lastSyncedText.length,
+        htmlLength: htmlContent.length
+      });
     } finally {
       this.state.isProgrammaticSync = false;
     }
@@ -190,16 +219,16 @@ class CKEditorSyncManager {
 
     if (current === target) return;
 
-    let paragraph = editable.querySelector<HTMLParagraphElement>("p");
-    if (!paragraph) {
-      paragraph = editable.ownerDocument.createElement("p");
-      editable.innerHTML = "";
-      editable.appendChild(paragraph);
-    }
-
     this.state.isProgrammaticSync = true;
     try {
-      paragraph.textContent = this.state.lastSyncedText;
+      // Converte texto com quebras de linha em HTML formatado
+      const htmlContent = textToHtml(this.state.lastSyncedText);
+      editable.innerHTML = htmlContent;
+      
+      void logger.debug("content", "Applied HTML to inline editor", {
+        textLength: this.state.lastSyncedText.length,
+        htmlLength: htmlContent.length
+      });
     } finally {
       this.state.isProgrammaticSync = false;
     }

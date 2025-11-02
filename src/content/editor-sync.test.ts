@@ -3,8 +3,61 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { editorSync } from "@content/editor-sync";
+import { editorSync, textToHtml } from "@content/editor-sync";
 import { SELECTORS, LIMITS } from "@shared/constants";
+
+describe("textToHtml()", () => {
+  it("should convert empty string to empty paragraph", () => {
+    expect(textToHtml("")).toBe("<p><br></p>");
+  });
+
+  it("should convert single line to paragraph", () => {
+    expect(textToHtml("Linha única")).toBe("<p>Linha única</p>");
+  });
+
+  it("should convert single line break to <br> within paragraph", () => {
+    expect(textToHtml("Linha 1\nLinha 2")).toBe("<p>Linha 1<br>Linha 2</p>");
+  });
+
+  it("should convert double line break to separate paragraphs", () => {
+    expect(textToHtml("Parágrafo 1\n\nParágrafo 2")).toBe("<p>Parágrafo 1</p><p>Parágrafo 2</p>");
+  });
+
+  it("should handle multiple line breaks within paragraph", () => {
+    expect(textToHtml("L1\nL2\nL3")).toBe("<p>L1<br>L2<br>L3</p>");
+  });
+
+  it("should handle multiple paragraphs with line breaks", () => {
+    const input = "Texto inicial\n\n📋 Informações:\n- Item 1\n  R: Resposta 1\n- Item 2\n  R: Resposta 2";
+    const expected = "<p>Texto inicial</p><p>📋 Informações:<br>- Item 1<br>R: Resposta 1<br>- Item 2<br>R: Resposta 2</p>";
+    expect(textToHtml(input)).toBe(expected);
+  });
+
+  it("should trim whitespace from lines", () => {
+    expect(textToHtml("  Linha 1  \n  Linha 2  ")).toBe("<p>Linha 1<br>Linha 2</p>");
+  });
+
+  it("should ignore empty lines", () => {
+    expect(textToHtml("Linha 1\n\n\n\nLinha 2")).toBe("<p>Linha 1</p><p>Linha 2</p>");
+  });
+
+  it("should handle text with emojis", () => {
+    expect(textToHtml("Texto 🎉\n\nMais texto 📋")).toBe("<p>Texto 🎉</p><p>Mais texto 📋</p>");
+  });
+
+  it("should handle complex formatted text from AI suggestions", () => {
+    const input = `Problema na impressora
+
+📋 Informações Complementares:
+- Qual é o modelo?
+  R: HP LaserJet
+- Quando começou?
+  R: Hoje pela manhã`;
+    
+    const expected = "<p>Problema na impressora</p><p>📋 Informações Complementares:<br>- Qual é o modelo?<br>R: HP LaserJet<br>- Quando começou?<br>R: Hoje pela manhã</p>";
+    expect(textToHtml(input)).toBe(expected);
+  });
+});
 
 describe("CKEditorSyncManager", () => {
   beforeEach(() => {

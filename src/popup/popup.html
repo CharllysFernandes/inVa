@@ -36,6 +36,42 @@
         </div>
       </section>
 
+      <section class="card" aria-labelledby="openrouter-section-title">
+        <div class="card-header">
+          <h2 id="openrouter-section-title" class="card-title">API do OpenRouter</h2>
+          <p class="card-subtitle">Configure suas credenciais para integração com OpenRouter.</p>
+        </div>
+        <label class="input-label" for="openrouterApiKey">API Key</label>
+        <input
+          id="openrouterApiKey"
+          class="text-input"
+          type="password"
+          placeholder="sk-or-v1-..."
+          autocomplete="off"
+        />
+        <label class="input-label" for="openrouterSiteUrl">Site URL (opcional)</label>
+        <input
+          id="openrouterSiteUrl"
+          class="text-input"
+          type="url"
+          placeholder="https://seu-site.com"
+          autocomplete="off"
+        />
+        <label class="input-label" for="openrouterAppName">App Name (opcional)</label>
+        <input
+          id="openrouterAppName"
+          class="text-input"
+          type="text"
+          placeholder="inVa Extension"
+          autocomplete="off"
+        />
+        <div class="actions">
+          <button id="saveOpenRouterConfig" type="button" class="primary">Salvar Configuração</button>
+          <button id="testOpenRouterConnection" type="button" class="secondary">Testar Conexão</button>
+          <p id="openrouterStatus" class="status-message" aria-live="polite" hidden>Salvo!</p>
+        </div>
+      </section>
+
       <section class="card" aria-labelledby="diagnostics-section-title">
         <div class="card-header">
           <h2 id="diagnostics-section-title" class="card-title">Diagnóstico</h2>

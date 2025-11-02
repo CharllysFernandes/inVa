@@ -14,6 +14,7 @@ import { commentStorage } from "@shared/comment-storage";
 import { isContentEmpty } from "@shared/text-utils";
 import { waitForDOMReady, debounce, waitForElement } from "@shared/dom-utils";
 import { editorSync } from "@content/editor-sync";
+import { AISuggestionsManager } from "@shared/ai-suggestions";
 import type { StorageClearReason } from "@shared/types";
 
 /**
@@ -97,9 +98,14 @@ function matchesUrl(savedUrl: string, currentUrl: string): boolean {
  * @function setupTextarea
  * @param {HTMLTextAreaElement} textarea - Textarea a ser configurado
  * @param {string} storageKey - Chave de storage para persistência
+ * @param {HTMLElement} parentContainer - Container pai para sugestões de IA
  * @returns {Promise<void>}
  */
-async function setupTextarea(textarea: HTMLTextAreaElement, storageKey: string): Promise<void> {
+async function setupTextarea(
+  textarea: HTMLTextAreaElement, 
+  storageKey: string,
+  parentContainer: HTMLElement
+): Promise<void> {
   // Carrega valor salvo
   try {
     const saved = await commentStorage.load(storageKey);
@@ -158,6 +164,15 @@ async function setupTextarea(textarea: HTMLTextAreaElement, storageKey: string):
       void logger.debug("content", "Storage change detected", { key: storageKey, length: newValue.length });
     }
   });
+
+  // Inicializa gerenciador de sugestões de IA
+  try {
+    const aiSuggestions = new AISuggestionsManager();
+    await aiSuggestions.initialize(textarea, parentContainer);
+    void logger.info("content", "AI suggestions manager initialized");
+  } catch (e) {
+    void logger.warn("content", "Failed to initialize AI suggestions", { error: String(e) });
+  }
 }
 
 /**
@@ -189,7 +204,7 @@ async function injectElement(savedUrl: string): Promise<boolean> {
   }
 
   const storageKey = commentStorage.getKey(savedUrl);
-  await setupTextarea(textarea, storageKey);
+  await setupTextarea(textarea, storageKey, wrapper);
   await registerSubmitHandlers(storageKey, textarea);
 
   return true;

@@ -11,12 +11,18 @@
  * @property {string} DEBUG_ENABLED - Flag de debug ativado/desativado
  * @property {string} LOGS - Chave para armazenamento de logs
  * @property {string} COMMENT_PREFIX - Prefixo para chaves de comentários por URL
+ * @property {string} OPENROUTER_API_KEY - API Key do OpenRouter
+ * @property {string} OPENROUTER_SITE_URL - Site URL para OpenRouter (opcional)
+ * @property {string} OPENROUTER_APP_NAME - Nome da aplicação para OpenRouter (opcional)
  */
 export const STORAGE_KEYS = {
   CREATE_TICKET_URL: "createTicketUrl",
   DEBUG_ENABLED: "inva_debug_enabled",
   LOGS: "inva_logs",
-  COMMENT_PREFIX: "inva_comments:"
+  COMMENT_PREFIX: "inva_comments:",
+  OPENROUTER_API_KEY: "inva_openrouter_api_key",
+  OPENROUTER_SITE_URL: "inva_openrouter_site_url",
+  OPENROUTER_APP_NAME: "inva_openrouter_app_name"
 } as const;
 
 /**

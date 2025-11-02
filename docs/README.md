@@ -4,6 +4,10 @@ Esta pasta contém toda a documentação técnica do projeto.
 
 ## 📋 Índice de Documentos
 
+### 🤖 Funcionalidades com IA
+
+- **[AI_SUGGESTIONS.md](./AI_SUGGESTIONS.md)** - Geração automática de perguntas complementares com IA
+
 ### 🔒 Segurança
 
 - **[CONTENT_SECURITY_POLICY.md](./CONTENT_SECURITY_POLICY.md)** - Implementação e detalhes da Content Security Policy
@@ -23,14 +27,15 @@ Esta pasta contém toda a documentação técnica do projeto.
 
 Cada documento foi criado com um propósito específico:
 
-| Documento                    | Propósito                                    | Quando Consultar                 |
-| ---------------------------- | -------------------------------------------- | -------------------------------- |
-| `CONTENT_SECURITY_POLICY.md` | Entender e manter a CSP da extensão          | Ao adicionar scripts ou recursos |
-| `SECURITY_CHECKLIST.md`      | Garantir práticas de código seguro           | Antes de commits e code reviews  |
-| `TESTING.md`                 | Criar e executar testes                      | Ao adicionar funcionalidades     |
-| `BUILD_AND_RELEASE.md`       | Build e publicação no GitHub                 | Ao criar releases                |
-| `VERSIONING.md`              | Criar releases e seguir conventional commits | Ao fazer commits e releases      |
-| `RELEASE_CHECKLIST.md`       | Processo completo de release                 | Antes e durante cada release     |
+| Documento                    | Propósito                                    | Quando Consultar                       |
+| ---------------------------- | -------------------------------------------- | -------------------------------------- |
+| `AI_SUGGESTIONS.md`          | Funcionalidade de sugestões de IA            | Ao trabalhar com integração OpenRouter |
+| `CONTENT_SECURITY_POLICY.md` | Entender e manter a CSP da extensão          | Ao adicionar scripts ou recursos       |
+| `SECURITY_CHECKLIST.md`      | Garantir práticas de código seguro           | Antes de commits e code reviews        |
+| `TESTING.md`                 | Criar e executar testes                      | Ao adicionar funcionalidades           |
+| `BUILD_AND_RELEASE.md`       | Build e publicação no GitHub                 | Ao criar releases                      |
+| `VERSIONING.md`              | Criar releases e seguir conventional commits | Ao fazer commits e releases            |
+| `RELEASE_CHECKLIST.md`       | Processo completo de release                 | Antes e durante cada release           |
 
 ## 🔍 Guia Rápido por Tarefa
 
