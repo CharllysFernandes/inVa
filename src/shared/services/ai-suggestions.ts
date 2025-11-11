@@ -4,9 +4,12 @@
  * @module ai-suggestions
  */
 
-import { logger } from "./logger";
-import { generateQuestions, isConfigured, type QuestionSuggestions } from "./openrouter-api";
-import { debounce } from "./dom-utils";
+import { logger, debounce } from "../core";
+import {
+  generateQuestions,
+  isConfigured,
+  type QuestionSuggestions,
+} from "./openrouter-api";
 
 /**
  * Interface para resposta de pergunta
@@ -240,7 +243,10 @@ export class AISuggestionsManager {
     // Verifica se API está configurada
     const configured = await isConfigured();
     if (!configured) {
-      void logger.warn("ai-suggestions", "OpenRouter not configured, suggestions disabled");
+      void logger.warn(
+        "ai-suggestions",
+        "OpenRouter not configured, suggestions disabled"
+      );
       return;
     }
 
@@ -261,7 +267,10 @@ export class AISuggestionsManager {
       }
     });
 
-    void logger.info("ai-suggestions", "AISuggestionsManager initialized and listening");
+    void logger.info(
+      "ai-suggestions",
+      "AISuggestionsManager initialized and listening"
+    );
   }
 
   /**
@@ -319,9 +328,11 @@ export class AISuggestionsManager {
       }
     } catch (e) {
       void logger.error("ai-suggestions", "Failed to generate suggestions", {
-        error: String(e)
+        error: String(e),
       });
-      this.showError("Erro ao gerar sugestões. Verifique a configuração da API.");
+      this.showError(
+        "Erro ao gerar sugestões. Verifique a configuração da API."
+      );
     } finally {
       this.isGenerating = false;
     }
@@ -432,7 +443,7 @@ export class AISuggestionsManager {
     this.attachEventListeners();
 
     void logger.info("ai-suggestions", "Suggestions rendered", {
-      questionCount: questions.length
+      questionCount: questions.length,
     });
   }
 
@@ -444,8 +455,10 @@ export class AISuggestionsManager {
     if (!this.container) return;
 
     // Captura respostas
-    const inputs = this.container.querySelectorAll<HTMLInputElement>(".inva-ai-answer-input");
-    inputs.forEach(input => {
+    const inputs = this.container.querySelectorAll<HTMLInputElement>(
+      ".inva-ai-answer-input"
+    );
+    inputs.forEach((input) => {
       input.addEventListener("input", (e) => {
         const target = e.target as HTMLInputElement;
         const index = parseInt(target.dataset.questionIndex || "0", 10);
@@ -458,7 +471,9 @@ export class AISuggestionsManager {
     applyBtn?.addEventListener("click", () => this.applyAnswers());
 
     // Botão dispensar
-    const dismissBtn = this.container.querySelector("#inva-dismiss-suggestions");
+    const dismissBtn = this.container.querySelector(
+      "#inva-dismiss-suggestions"
+    );
     dismissBtn?.addEventListener("click", () => this.hide());
   }
 
@@ -487,17 +502,22 @@ export class AISuggestionsManager {
     // Formata as respostas
     const currentText = this.textarea.value.trim();
     const additionalInfo = answeredQuestions
-      .map(qa => `- ${qa.question}\n  R: ${qa.answer}`)
+      .map((qa) => `- ${qa.question}\n  R: ${qa.answer}`)
       .join("\n");
 
     // Verifica se já existe o cabeçalho "📋 Informações Complementares:"
-    const hasComplementaryInfo = currentText.includes("📋 Informações Complementares:");
+    const hasComplementaryInfo = currentText.includes(
+      "📋 Informações Complementares:"
+    );
 
     let newText: string;
     if (hasComplementaryInfo) {
       // Já existe o cabeçalho, apenas adiciona as novas respostas ao final
       newText = `${currentText}\n${additionalInfo}`;
-      void logger.debug("ai-suggestions", "Appending to existing complementary info");
+      void logger.debug(
+        "ai-suggestions",
+        "Appending to existing complementary info"
+      );
     } else {
       // Primeira vez, adiciona o cabeçalho
       newText = `${currentText}\n\n📋 Informações Complementares:\n${additionalInfo}`;
@@ -509,7 +529,7 @@ export class AISuggestionsManager {
 
     void logger.info("ai-suggestions", "Answers applied to textarea", {
       answerCount: answeredQuestions.length,
-      hasExistingHeader: hasComplementaryInfo
+      hasExistingHeader: hasComplementaryInfo,
     });
 
     this.hide();
@@ -534,7 +554,7 @@ export class AISuggestionsManager {
    */
   public destroy(): void {
     this.hide();
-    
+
     if (this.container) {
       this.container.remove();
       this.container = null;

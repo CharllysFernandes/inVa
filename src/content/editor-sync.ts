@@ -4,9 +4,9 @@
  * @module editor-sync
  */
 
-import { SELECTORS, LIMITS } from "@shared/constants";
-import { normalizeContent, isContentEmpty } from "@shared/text-utils";
-import { logger } from "@shared/logger";
+import { SELECTORS, LIMITS } from "@shared/core";
+import { normalizeContent, isContentEmpty } from "@shared/core";
+import { logger } from "@shared/core";
 
 /**
  * Converte texto com quebras de linha em HTML formatado para CKEditor
@@ -19,22 +19,24 @@ import { logger } from "@shared/logger";
  */
 export function textToHtml(text: string): string {
   if (!text) return "<p><br></p>";
-  
+
   // Divide por blocos de parágrafos (dupla quebra de linha)
   const paragraphs = text.split(/\n\n+/);
-  
-  const htmlParagraphs = paragraphs.map(paragraph => {
-    // Dentro de cada parágrafo, substitui quebras simples por <br>
-    const lines = paragraph.split('\n');
-    const htmlLines = lines
-      .map(line => line.trim())
-      .filter(line => line.length > 0)
-      .join('<br>');
-    
-    return htmlLines ? `<p>${htmlLines}</p>` : '';
-  }).filter(p => p.length > 0);
-  
-  return htmlParagraphs.length > 0 ? htmlParagraphs.join('') : '<p><br></p>';
+
+  const htmlParagraphs = paragraphs
+    .map((paragraph) => {
+      // Dentro de cada parágrafo, substitui quebras simples por <br>
+      const lines = paragraph.split("\n");
+      const htmlLines = lines
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .join("<br>");
+
+      return htmlLines ? `<p>${htmlLines}</p>` : "";
+    })
+    .filter((p) => p.length > 0);
+
+  return htmlParagraphs.length > 0 ? htmlParagraphs.join("") : "<p><br></p>";
 }
 
 /**
@@ -81,7 +83,7 @@ class CKEditorSyncManager {
   private state: EditorState = {
     lastSyncedText: "",
     enforcementActive: false,
-    isProgrammaticSync: false
+    isProgrammaticSync: false,
   };
 
   /**
@@ -94,7 +96,7 @@ class CKEditorSyncManager {
     iframeAppearance: null,
     iframeStability: null,
     inlineMutation: null,
-    inlineAppearance: null
+    inlineAppearance: null,
   };
 
   /**
@@ -106,7 +108,9 @@ class CKEditorSyncManager {
    * editorSync.sync('Meu comentário importante');
    */
   sync(text: string): void {
-    void logger.debug("content", "Syncing CKEditor content", { length: text.length });
+    void logger.debug("content", "Syncing CKEditor content", {
+      length: text.length,
+    });
     this.state.lastSyncedText = text;
     this.state.enforcementActive = !isContentEmpty(text);
     this.syncInlineEditor();
@@ -135,21 +139,30 @@ class CKEditorSyncManager {
    * @returns {void}
    */
   private syncIframeEditor(): void {
-    const iframe = document.querySelector<HTMLIFrameElement>(SELECTORS.IFRAME_EDITOR);
+    const iframe = document.querySelector<HTMLIFrameElement>(
+      SELECTORS.IFRAME_EDITOR
+    );
     if (iframe) {
       this.disconnectIframeAppearance();
       if (iframe.contentDocument?.readyState === "complete") {
         this.applyTextToIframe(iframe);
       } else {
-        iframe.addEventListener("load", () => this.applyTextToIframe(iframe), { once: true });
+        iframe.addEventListener("load", () => this.applyTextToIframe(iframe), {
+          once: true,
+        });
       }
       this.startIframeWatchers(iframe);
     } else if (!this.observers.iframeAppearance) {
       this.observers.iframeAppearance = new MutationObserver(() => {
-        const candidate = document.querySelector<HTMLIFrameElement>(SELECTORS.IFRAME_EDITOR);
+        const candidate = document.querySelector<HTMLIFrameElement>(
+          SELECTORS.IFRAME_EDITOR
+        );
         if (candidate) this.syncIframeEditor();
       });
-      this.observers.iframeAppearance.observe(document.body, { childList: true, subtree: true });
+      this.observers.iframeAppearance.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
     }
   }
 
@@ -160,17 +173,24 @@ class CKEditorSyncManager {
    * @returns {void}
    */
   private syncInlineEditor(): void {
-    const editable = document.querySelector<HTMLElement>(SELECTORS.INLINE_EDITOR);
+    const editable = document.querySelector<HTMLElement>(
+      SELECTORS.INLINE_EDITOR
+    );
     if (editable) {
       this.disconnectInlineAppearance();
       this.applyTextToInline(editable);
       this.startInlineWatchers(editable);
     } else if (!this.observers.inlineAppearance) {
       this.observers.inlineAppearance = new MutationObserver(() => {
-        const candidate = document.querySelector<HTMLElement>(SELECTORS.INLINE_EDITOR);
+        const candidate = document.querySelector<HTMLElement>(
+          SELECTORS.INLINE_EDITOR
+        );
         if (candidate) this.syncInlineEditor();
       });
-      this.observers.inlineAppearance.observe(document.body, { childList: true, subtree: true });
+      this.observers.inlineAppearance.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
     }
   }
 
@@ -195,10 +215,10 @@ class CKEditorSyncManager {
       // Converte texto com quebras de linha em HTML formatado
       const htmlContent = textToHtml(this.state.lastSyncedText);
       body.innerHTML = htmlContent;
-      
+
       void logger.debug("content", "Applied HTML to iframe", {
         textLength: this.state.lastSyncedText.length,
-        htmlLength: htmlContent.length
+        htmlLength: htmlContent.length,
       });
     } finally {
       this.state.isProgrammaticSync = false;
@@ -224,10 +244,10 @@ class CKEditorSyncManager {
       // Converte texto com quebras de linha em HTML formatado
       const htmlContent = textToHtml(this.state.lastSyncedText);
       editable.innerHTML = htmlContent;
-      
+
       void logger.debug("content", "Applied HTML to inline editor", {
         textLength: this.state.lastSyncedText.length,
-        htmlLength: htmlContent.length
+        htmlLength: htmlContent.length,
       });
     } finally {
       this.state.isProgrammaticSync = false;
@@ -253,16 +273,22 @@ class CKEditorSyncManager {
       const current = normalizeContent(body.textContent ?? "");
       const target = normalizeContent(this.state.lastSyncedText);
       const shouldReapply =
-        target.length > 0 && isContentEmpty(current) && !this.iframeHasFocus(iframe);
+        target.length > 0 &&
+        isContentEmpty(current) &&
+        !this.iframeHasFocus(iframe);
 
       if (shouldReapply) {
         void logger.debug("content", "Reapplying text after iframe mutation", {
-          targetLength: this.state.lastSyncedText.length
+          targetLength: this.state.lastSyncedText.length,
         });
         this.applyTextToIframe(iframe);
       }
     });
-    this.observers.iframeMutation.observe(body, { childList: true, subtree: true, characterData: true });
+    this.observers.iframeMutation.observe(body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
 
     this.startStabilityChecker(iframe);
   }
@@ -284,7 +310,9 @@ class CKEditorSyncManager {
 
     this.observers.iframeStability = window.setInterval(() => {
       attempts++;
-      const applied = this.state.enforcementActive ? this.applyTextToIframe(iframe) : true;
+      const applied = this.state.enforcementActive
+        ? this.applyTextToIframe(iframe)
+        : true;
 
       if (applied) {
         stableMatches++;
@@ -322,16 +350,26 @@ class CKEditorSyncManager {
       const current = normalizeContent(editable.textContent ?? "");
       const target = normalizeContent(this.state.lastSyncedText);
       const shouldReapply =
-        target.length > 0 && isContentEmpty(current) && !this.inlineHasFocus(editable);
+        target.length > 0 &&
+        isContentEmpty(current) &&
+        !this.inlineHasFocus(editable);
 
       if (shouldReapply) {
-        void logger.debug("content", "Reapplying text after inline editor mutation", {
-          targetLength: this.state.lastSyncedText.length
-        });
+        void logger.debug(
+          "content",
+          "Reapplying text after inline editor mutation",
+          {
+            targetLength: this.state.lastSyncedText.length,
+          }
+        );
         this.applyTextToInline(editable);
       }
     });
-    this.observers.inlineMutation.observe(editable, { childList: true, subtree: true, characterData: true });
+    this.observers.inlineMutation.observe(editable, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
   }
 
   /**
@@ -356,7 +394,9 @@ class CKEditorSyncManager {
    */
   private inlineHasFocus(editable: HTMLElement): boolean {
     const active = document.activeElement;
-    return Boolean(active && (active === editable || editable.contains(active)));
+    return Boolean(
+      active && (active === editable || editable.contains(active))
+    );
   }
 
   /**

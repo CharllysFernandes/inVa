@@ -5,10 +5,10 @@
  * @module comment-storage
  */
 
-import { STORAGE_KEYS } from "./constants";
-import type { StorageClearReason } from "./types";
-import { logger } from "./logger";
-import { RateLimiter, RATE_LIMIT_CONFIGS } from "./rate-limiter";
+import { STORAGE_KEYS } from "../core/constants";
+import type { StorageClearReason } from "../core/types";
+import { logger } from "../core/logger";
+import { RateLimiter, RATE_LIMIT_CONFIGS } from "../core/rate-limiter";
 
 /**
  * Gerenciador de armazenamento de comentários
@@ -31,7 +31,7 @@ class CommentStorageManager {
   private rateLimiters = {
     read: new RateLimiter(RATE_LIMIT_CONFIGS.STORAGE_READ),
     write: new RateLimiter(RATE_LIMIT_CONFIGS.STORAGE_WRITE),
-    delete: new RateLimiter(RATE_LIMIT_CONFIGS.STORAGE_DELETE)
+    delete: new RateLimiter(RATE_LIMIT_CONFIGS.STORAGE_DELETE),
   };
 
   /**
@@ -103,21 +103,28 @@ class CommentStorageManager {
    */
   async remove(key: string, reason: StorageClearReason): Promise<void> {
     this.removalReasons.set(key, reason);
-    
+
     return this.rateLimiters.delete.execute(async () => {
       return new Promise<void>((resolve, reject) => {
         chrome.storage.local.remove(key, () => {
           const err = chrome.runtime.lastError;
           this.removalReasons.delete(key);
           if (err) {
-            void logger.error("content", "Failed to remove comment from storage", {
-              error: String(err),
-              reason,
-              key
-            });
+            void logger.error(
+              "content",
+              "Failed to remove comment from storage",
+              {
+                error: String(err),
+                reason,
+                key,
+              }
+            );
             reject(err);
           } else {
-            void logger.info("content", "Removed comment from storage", { key, reason });
+            void logger.info("content", "Removed comment from storage", {
+              key,
+              reason,
+            });
             resolve();
           }
         });
@@ -163,7 +170,7 @@ class CommentStorageManager {
     return {
       read: this.rateLimiters.read.getStats(),
       write: this.rateLimiters.write.getStats(),
-      delete: this.rateLimiters.delete.getStats()
+      delete: this.rateLimiters.delete.getStats(),
     };
   }
 

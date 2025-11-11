@@ -3,7 +3,7 @@
  * @module elemento
  */
 
-import { ELEMENT_IDS, CSS_CLASSES } from "./constants";
+import { ELEMENT_IDS, CSS_CLASSES } from "../core/constants";
 
 /**
  * Configuração do formulário de comentário
@@ -35,7 +35,7 @@ export interface CommentFormElements {
  */
 const DEFAULT_CONFIG: Required<CommentFormConfig> = {
   placeholder: "Digite sua anotação aqui...",
-  rows: 4
+  rows: 4,
 };
 
 /**
@@ -95,7 +95,9 @@ export function injectCommentFormStyles(): void {
  * });
  * document.body.appendChild(form);
  */
-export function createCommentForm(config: CommentFormConfig = {}): CommentFormElements {
+export function createCommentForm(
+  config: CommentFormConfig = {}
+): CommentFormElements {
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
   // Injeta estilos
@@ -128,6 +130,6 @@ export function createCommentForm(config: CommentFormConfig = {}): CommentFormEl
 
   return {
     form,
-    textarea
+    textarea,
   };
 }

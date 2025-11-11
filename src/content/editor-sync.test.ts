@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { editorSync, textToHtml } from "@content/editor-sync";
-import { SELECTORS, LIMITS } from "@shared/constants";
+import { SELECTORS, LIMITS } from "@shared/core";
 
 describe("textToHtml()", () => {
   it("should convert empty string to empty paragraph", () => {
@@ -20,7 +20,9 @@ describe("textToHtml()", () => {
   });
 
   it("should convert double line break to separate paragraphs", () => {
-    expect(textToHtml("Parágrafo 1\n\nParágrafo 2")).toBe("<p>Parágrafo 1</p><p>Parágrafo 2</p>");
+    expect(textToHtml("Parágrafo 1\n\nParágrafo 2")).toBe(
+      "<p>Parágrafo 1</p><p>Parágrafo 2</p>"
+    );
   });
 
   it("should handle multiple line breaks within paragraph", () => {
@@ -28,21 +30,29 @@ describe("textToHtml()", () => {
   });
 
   it("should handle multiple paragraphs with line breaks", () => {
-    const input = "Texto inicial\n\n📋 Informações:\n- Item 1\n  R: Resposta 1\n- Item 2\n  R: Resposta 2";
-    const expected = "<p>Texto inicial</p><p>📋 Informações:<br>- Item 1<br>R: Resposta 1<br>- Item 2<br>R: Resposta 2</p>";
+    const input =
+      "Texto inicial\n\n📋 Informações:\n- Item 1\n  R: Resposta 1\n- Item 2\n  R: Resposta 2";
+    const expected =
+      "<p>Texto inicial</p><p>📋 Informações:<br>- Item 1<br>R: Resposta 1<br>- Item 2<br>R: Resposta 2</p>";
     expect(textToHtml(input)).toBe(expected);
   });
 
   it("should trim whitespace from lines", () => {
-    expect(textToHtml("  Linha 1  \n  Linha 2  ")).toBe("<p>Linha 1<br>Linha 2</p>");
+    expect(textToHtml("  Linha 1  \n  Linha 2  ")).toBe(
+      "<p>Linha 1<br>Linha 2</p>"
+    );
   });
 
   it("should ignore empty lines", () => {
-    expect(textToHtml("Linha 1\n\n\n\nLinha 2")).toBe("<p>Linha 1</p><p>Linha 2</p>");
+    expect(textToHtml("Linha 1\n\n\n\nLinha 2")).toBe(
+      "<p>Linha 1</p><p>Linha 2</p>"
+    );
   });
 
   it("should handle text with emojis", () => {
-    expect(textToHtml("Texto 🎉\n\nMais texto 📋")).toBe("<p>Texto 🎉</p><p>Mais texto 📋</p>");
+    expect(textToHtml("Texto 🎉\n\nMais texto 📋")).toBe(
+      "<p>Texto 🎉</p><p>Mais texto 📋</p>"
+    );
   });
 
   it("should handle complex formatted text from AI suggestions", () => {
@@ -53,8 +63,9 @@ describe("textToHtml()", () => {
   R: HP LaserJet
 - Quando começou?
   R: Hoje pela manhã`;
-    
-    const expected = "<p>Problema na impressora</p><p>📋 Informações Complementares:<br>- Qual é o modelo?<br>R: HP LaserJet<br>- Quando começou?<br>R: Hoje pela manhã</p>";
+
+    const expected =
+      "<p>Problema na impressora</p><p>📋 Informações Complementares:<br>- Qual é o modelo?<br>R: HP LaserJet<br>- Quando começou?<br>R: Hoje pela manhã</p>";
     expect(textToHtml(input)).toBe(expected);
   });
 });
@@ -114,18 +125,18 @@ describe("CKEditorSyncManager", () => {
       document.body.appendChild(editable);
 
       editorSync.sync("Test");
-      
+
       // Cleanup deve desconectar tudo
       editorSync.cleanup();
-      
+
       expect(document.body).toBeDefined();
     });
 
     it("should clear stability interval", () => {
       const clearIntervalSpy = vi.spyOn(window, "clearInterval");
-      
+
       editorSync.cleanup();
-      
+
       // Pode ou não ter sido chamado dependendo do estado
       expect(clearIntervalSpy).toBeDefined();
       clearIntervalSpy.mockRestore();
@@ -204,11 +215,11 @@ describe("CKEditorSyncManager", () => {
 
     it("should apply text to iframe editor", () => {
       const text = "Iframe content";
-      
+
       // Marcar como loaded
       Object.defineProperty(iframeDoc, "readyState", {
         value: "complete",
-        writable: true
+        writable: true,
       });
 
       editorSync.sync(text);
@@ -221,7 +232,7 @@ describe("CKEditorSyncManager", () => {
     it("should create paragraph in iframe if not exists", () => {
       Object.defineProperty(iframeDoc, "readyState", {
         value: "complete",
-        writable: true
+        writable: true,
       });
 
       iframeDoc.body.innerHTML = "";
@@ -234,10 +245,10 @@ describe("CKEditorSyncManager", () => {
 
     it("should wait for iframe load if not ready", () => {
       const addEventListenerSpy = vi.spyOn(iframe, "addEventListener");
-      
+
       Object.defineProperty(iframeDoc, "readyState", {
         value: "loading",
-        writable: true
+        writable: true,
       });
 
       editorSync.sync("Wait for load");
@@ -254,14 +265,16 @@ describe("CKEditorSyncManager", () => {
     it("should return true when content matches", () => {
       Object.defineProperty(iframeDoc, "readyState", {
         value: "complete",
-        writable: true
+        writable: true,
       });
 
       iframeDoc.body.innerHTML = "<p>Matching content</p>";
       editorSync.sync("Matching content");
 
       // Sync foi bem-sucedido
-      expect(iframeDoc.body.querySelector("p")?.textContent).toBe("Matching content");
+      expect(iframeDoc.body.querySelector("p")?.textContent).toBe(
+        "Matching content"
+      );
     });
   });
 
@@ -281,7 +294,7 @@ describe("CKEditorSyncManager", () => {
 
       // Modificar conteúdo não deve acionar replicação
       editable.querySelector("p")!.textContent = "Modified";
-      
+
       expect(editable.querySelector("p")?.textContent).toBe("Modified");
     });
 
@@ -293,7 +306,7 @@ describe("CKEditorSyncManager", () => {
       editable.innerHTML = "";
 
       // Dar tempo para o observer processar
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Conteúdo deve ser reaplicado
       const paragraph = editable.querySelector("p");
@@ -340,7 +353,7 @@ describe("CKEditorSyncManager", () => {
 
       Object.defineProperty(iframeDoc, "readyState", {
         value: "complete",
-        writable: true
+        writable: true,
       });
     });
 
@@ -443,7 +456,7 @@ describe("CKEditorSyncManager", () => {
 
       const paragraph = editable.querySelector("p");
       expect(paragraph).toBeDefined();
-      
+
       if (paragraph) {
         paragraph.focus();
         // Foco deve ser detectado (testado indiretamente)
@@ -463,17 +476,17 @@ describe("CKEditorSyncManager", () => {
 
       Object.defineProperty(iframeDoc, "readyState", {
         value: "complete",
-        writable: true
+        writable: true,
       });
 
       editorSync.sync("Test iframe focus");
 
       const paragraph = iframeDoc.body.querySelector("p")!;
-      
+
       // Simular foco no iframe
       Object.defineProperty(iframeDoc, "activeElement", {
         value: paragraph,
-        writable: true
+        writable: true,
       });
 
       // Foco deve ser detectado (testado indiretamente)
@@ -501,7 +514,7 @@ describe("CKEditorSyncManager", () => {
       const iframeDoc = iframe.contentDocument!;
       Object.defineProperty(iframeDoc, "body", {
         value: null,
-        writable: true
+        writable: true,
       });
 
       expect(() => {
@@ -579,7 +592,7 @@ describe("CKEditorSyncManager", () => {
 
       Object.defineProperty(iframeDoc, "readyState", {
         value: "complete",
-        writable: true
+        writable: true,
       });
 
       // Sincronizar

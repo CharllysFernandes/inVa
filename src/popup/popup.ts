@@ -6,29 +6,53 @@
  * @module popup
  */
 
-import { getStoredCreateTicketUrl, saveCreateTicketUrl, getStoredOpenRouterConfig, saveOpenRouterConfig, type OpenRouterConfig } from "@shared/utils";
-import { debugAPI, logger } from "@shared/logger";
-import { LIMITS } from "@shared/constants";
+import {
+  getStoredCreateTicketUrl,
+  saveCreateTicketUrl,
+  getStoredOpenRouterConfig,
+  saveOpenRouterConfig,
+  type OpenRouterConfig,
+} from "@shared/core";
+import { debugAPI, logger } from "@shared/core";
+import { LIMITS } from "@shared/core";
 
 /**
  * Referências aos elementos do DOM do popup
  */
-const urlInput = document.getElementById("createTicketUrl") as HTMLInputElement | null;
+const urlInput = document.getElementById(
+  "createTicketUrl"
+) as HTMLInputElement | null;
 const saveButton = document.getElementById("saveCreateTicketUrl");
-const saveStatus = document.getElementById("saveStatus") as HTMLParagraphElement | null;
+const saveStatus = document.getElementById(
+  "saveStatus"
+) as HTMLParagraphElement | null;
 
 // Elementos do OpenRouter
-const openrouterApiKeyInput = document.getElementById("openrouterApiKey") as HTMLInputElement | null;
-const openrouterSiteUrlInput = document.getElementById("openrouterSiteUrl") as HTMLInputElement | null;
-const openrouterAppNameInput = document.getElementById("openrouterAppName") as HTMLInputElement | null;
+const openrouterApiKeyInput = document.getElementById(
+  "openrouterApiKey"
+) as HTMLInputElement | null;
+const openrouterSiteUrlInput = document.getElementById(
+  "openrouterSiteUrl"
+) as HTMLInputElement | null;
+const openrouterAppNameInput = document.getElementById(
+  "openrouterAppName"
+) as HTMLInputElement | null;
 const saveOpenRouterButton = document.getElementById("saveOpenRouterConfig");
-const testOpenRouterButton = document.getElementById("testOpenRouterConnection");
-const openrouterStatus = document.getElementById("openrouterStatus") as HTMLParagraphElement | null;
+const testOpenRouterButton = document.getElementById(
+  "testOpenRouterConnection"
+);
+const openrouterStatus = document.getElementById(
+  "openrouterStatus"
+) as HTMLParagraphElement | null;
 
-const debugEnabledCheckbox = document.getElementById("debugEnabled") as HTMLInputElement | null;
+const debugEnabledCheckbox = document.getElementById(
+  "debugEnabled"
+) as HTMLInputElement | null;
 const viewLogsBtn = document.getElementById("viewLogs");
 const clearLogsBtn = document.getElementById("clearLogs");
-const logsOutput = document.getElementById("logsOutput") as HTMLPreElement | null;
+const logsOutput = document.getElementById(
+  "logsOutput"
+) as HTMLPreElement | null;
 const appVersionLabel = document.getElementById("appVersion");
 
 /**
@@ -57,7 +81,7 @@ try {
       urlInput.value = saved;
       void logger.debug("popup", "Loaded stored ticket URL", { url: saved });
     }
-    
+
     // Carrega configuração do OpenRouter
     const openRouterConfig = await getStoredOpenRouterConfig();
     if (openrouterApiKeyInput && openRouterConfig.apiKey) {
@@ -69,8 +93,10 @@ try {
     if (openrouterAppNameInput && openRouterConfig.appName) {
       openrouterAppNameInput.value = openRouterConfig.appName;
     }
-    void logger.debug("popup", "Loaded OpenRouter config", { hasApiKey: Boolean(openRouterConfig.apiKey) });
-    
+    void logger.debug("popup", "Loaded OpenRouter config", {
+      hasApiKey: Boolean(openRouterConfig.apiKey),
+    });
+
     // estado inicial do debug
     const dbg = await debugAPI.getDebugEnabled();
     if (debugEnabledCheckbox) debugEnabledCheckbox.checked = dbg;
@@ -87,14 +113,20 @@ try {
 if (saveButton) {
   saveButton.addEventListener("click", async () => {
     const value = urlInput?.value.trim() ?? "";
-    void logger.debug("popup", "Attempting to save ticket URL", { valueLength: value.length });
+    void logger.debug("popup", "Attempting to save ticket URL", {
+      valueLength: value.length,
+    });
     try {
       // validação básica
       if (value) {
         // Se não possuir protocolo, assume https
-        const finalValue = /^(https?:)?\/\//i.test(value) ? value : `https://${value}`;
+        const finalValue = /^(https?:)?\/\//i.test(value)
+          ? value
+          : `https://${value}`;
         await saveCreateTicketUrl(finalValue);
-        void logger.info("popup", "Ticket URL saved via popup", { url: finalValue });
+        void logger.info("popup", "Ticket URL saved via popup", {
+          url: finalValue,
+        });
         if (saveStatus) {
           saveStatus.textContent = "Salvo!";
           saveStatus.hidden = false;
@@ -108,7 +140,9 @@ if (saveButton) {
         void logger.warn("popup", "Ticket URL input empty, ignoring save");
       }
     } catch (e) {
-      void logger.error("popup", "Failed to save ticket URL", { error: String(e) });
+      void logger.error("popup", "Failed to save ticket URL", {
+        error: String(e),
+      });
       if (saveStatus) {
         saveStatus.textContent = "Falha ao salvar";
         saveStatus.hidden = false;
@@ -123,7 +157,9 @@ if (saveButton) {
  */
 debugEnabledCheckbox?.addEventListener("change", async () => {
   await debugAPI.setDebugEnabled(Boolean(debugEnabledCheckbox?.checked));
-  void logger.info("popup", "Debug toggled", { enabled: debugEnabledCheckbox?.checked });
+  void logger.info("popup", "Debug toggled", {
+    enabled: debugEnabledCheckbox?.checked,
+  });
 });
 
 /**
@@ -136,7 +172,14 @@ viewLogsBtn?.addEventListener("click", async () => {
   if (logsOutput) {
     logsOutput.hidden = false;
     logsOutput.textContent = logs
-      .map((l) => `${new Date(l.ts).toISOString()} [${l.level.toUpperCase()}] ${l.component}: ${l.message}${l.data ? "\n  " + JSON.stringify(l.data, null, 2) : ""}`)
+      .map(
+        (l) =>
+          `${new Date(l.ts).toISOString()} [${l.level.toUpperCase()}] ${
+            l.component
+          }: ${l.message}${
+            l.data ? "\n  " + JSON.stringify(l.data, null, 2) : ""
+          }`
+      )
       .join("\n");
   }
 });
@@ -162,23 +205,23 @@ saveOpenRouterButton?.addEventListener("click", async () => {
   const apiKey = openrouterApiKeyInput?.value.trim() ?? "";
   const siteUrl = openrouterSiteUrlInput?.value.trim() ?? "";
   const appName = openrouterAppNameInput?.value.trim() ?? "";
-  
-  void logger.debug("popup", "Attempting to save OpenRouter config", { 
+
+  void logger.debug("popup", "Attempting to save OpenRouter config", {
     hasApiKey: Boolean(apiKey),
     hasSiteUrl: Boolean(siteUrl),
-    hasAppName: Boolean(appName)
+    hasAppName: Boolean(appName),
   });
-  
+
   try {
     const config: OpenRouterConfig = {
       apiKey: apiKey || undefined,
       siteUrl: siteUrl || undefined,
-      appName: appName || undefined
+      appName: appName || undefined,
     };
-    
+
     await saveOpenRouterConfig(config);
     void logger.info("popup", "OpenRouter config saved via popup");
-    
+
     if (openrouterStatus) {
       openrouterStatus.textContent = "Configuração salva!";
       openrouterStatus.style.color = "#047857";
@@ -190,7 +233,9 @@ saveOpenRouterButton?.addEventListener("click", async () => {
       }, LIMITS.STATUS_MESSAGE_DURATION_MS);
     }
   } catch (e) {
-    void logger.error("popup", "Failed to save OpenRouter config", { error: String(e) });
+    void logger.error("popup", "Failed to save OpenRouter config", {
+      error: String(e),
+    });
     if (openrouterStatus) {
       openrouterStatus.textContent = "Falha ao salvar";
       openrouterStatus.style.color = "#dc2626";
@@ -205,7 +250,7 @@ saveOpenRouterButton?.addEventListener("click", async () => {
  */
 testOpenRouterButton?.addEventListener("click", async () => {
   const apiKey = openrouterApiKeyInput?.value.trim() ?? "";
-  
+
   if (!apiKey) {
     if (openrouterStatus) {
       openrouterStatus.textContent = "API Key não configurada";
@@ -219,26 +264,27 @@ testOpenRouterButton?.addEventListener("click", async () => {
     }
     return;
   }
-  
+
   void logger.debug("popup", "Testing OpenRouter connection");
-  
+
   if (openrouterStatus) {
     openrouterStatus.textContent = "Testando conexão...";
     openrouterStatus.style.color = "#0891b2";
     openrouterStatus.hidden = false;
   }
-  
+
   try {
     // Faz uma requisição simples para validar a API Key
     const response = await fetch("https://openrouter.ai/api/v1/models", {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": openrouterSiteUrlInput?.value.trim() || window.location.origin,
-        "X-Title": openrouterAppNameInput?.value.trim() || "inVa Extension"
-      }
+        Authorization: `Bearer ${apiKey}`,
+        "HTTP-Referer":
+          openrouterSiteUrlInput?.value.trim() || window.location.origin,
+        "X-Title": openrouterAppNameInput?.value.trim() || "inVa Extension",
+      },
     });
-    
+
     if (response.ok) {
       void logger.info("popup", "OpenRouter connection test successful");
       if (openrouterStatus) {
@@ -253,9 +299,9 @@ testOpenRouterButton?.addEventListener("click", async () => {
       }
     } else {
       const errorText = await response.text();
-      void logger.error("popup", "OpenRouter connection test failed", { 
+      void logger.error("popup", "OpenRouter connection test failed", {
         status: response.status,
-        error: errorText
+        error: errorText,
       });
       if (openrouterStatus) {
         openrouterStatus.textContent = `Erro: ${response.status} - Verifique a API Key`;
@@ -264,7 +310,9 @@ testOpenRouterButton?.addEventListener("click", async () => {
       }
     }
   } catch (e) {
-    void logger.error("popup", "OpenRouter connection test error", { error: String(e) });
+    void logger.error("popup", "OpenRouter connection test error", {
+      error: String(e),
+    });
     if (openrouterStatus) {
       openrouterStatus.textContent = "Erro na conexão";
       openrouterStatus.style.color = "#dc2626";

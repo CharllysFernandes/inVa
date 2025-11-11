@@ -6,8 +6,11 @@
  * @module openrouter-api
  */
 
-import { getStoredOpenRouterConfig, type OpenRouterConfig } from "./utils";
-import { logger } from "./logger";
+import {
+  getStoredOpenRouterConfig,
+  type OpenRouterConfig,
+} from "../core/utils";
+import { logger } from "../core/logger";
 
 /**
  * Interface para resposta de chat completion
@@ -92,7 +95,7 @@ function simpleHash(text: string): string {
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
     const char = text.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
   return Math.abs(hash).toString(36);
@@ -110,7 +113,9 @@ export async function isConfigured(): Promise<boolean> {
     void logger.debug("openrouter", "Configuration check", { hasApiKey });
     return hasApiKey;
   } catch (e) {
-    void logger.error("openrouter", "Failed to check configuration", { error: String(e) });
+    void logger.error("openrouter", "Failed to check configuration", {
+      error: String(e),
+    });
     return false;
   }
 }
@@ -129,41 +134,47 @@ export async function chatCompletion(
   model: string = DEFAULT_MODEL
 ): Promise<ChatCompletionResponse> {
   const config = await getStoredOpenRouterConfig();
-  
+
   if (!config.apiKey) {
     const error = new Error("OpenRouter API Key não configurada");
     void logger.error("openrouter", "API Key missing", {});
     throw error;
   }
 
-  void logger.debug("openrouter", "Sending chat completion request via background", {
-    model,
-    messageCount: messages.length
-  });
+  void logger.debug(
+    "openrouter",
+    "Sending chat completion request via background",
+    {
+      model,
+      messageCount: messages.length,
+    }
+  );
 
   try {
     // Envia requisição para o background script
     void logger.debug("openrouter", "Calling chrome.runtime.sendMessage", {});
-    
+
     const response = await chrome.runtime.sendMessage({
       type: "OPENROUTER_CHAT_COMPLETION",
       messages,
-      model
+      model,
     });
 
     void logger.debug("openrouter", "Received response from background", {
       hasResponse: !!response,
-      success: response?.success
+      success: response?.success,
     });
 
     if (!response) {
       void logger.error("openrouter", "No response from background script", {});
-      throw new Error("Sem resposta do background script. Verifique se o service worker está ativo.");
+      throw new Error(
+        "Sem resposta do background script. Verifique se o service worker está ativo."
+      );
     }
 
     if (!response.success) {
       void logger.error("openrouter", "API request failed", {
-        error: response.error
+        error: response.error,
       });
       throw new Error(`OpenRouter API error: ${response.error}`);
     }
@@ -171,7 +182,7 @@ export async function chatCompletion(
     const data = response.data as ChatCompletionResponse;
     void logger.info("openrouter", "Chat completion successful", {
       model: data.model,
-      tokensUsed: data.usage?.total_tokens
+      tokensUsed: data.usage?.total_tokens,
     });
 
     return data;
@@ -179,7 +190,7 @@ export async function chatCompletion(
     const error = e as Error;
     void logger.error("openrouter", "Chat completion request failed", {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
     throw e;
   }
@@ -198,10 +209,10 @@ export async function generateQuestions(
 ): Promise<QuestionSuggestions> {
   // Limpa texto e valida
   const cleanText = userText.trim();
-  
+
   if (cleanText.length < 10) {
     void logger.debug("openrouter", "Text too short for suggestions", {
-      length: cleanText.length
+      length: cleanText.length,
     });
     return { questions: [], context: cleanText, timestamp: Date.now() };
   }
@@ -212,7 +223,7 @@ export async function generateQuestions(
     const cached = suggestionsCache.get(cacheKey)!;
     if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
       void logger.debug("openrouter", "Returning cached suggestions", {
-        questionCount: cached.questions.length
+        questionCount: cached.questions.length,
       });
       return cached;
     }
@@ -241,27 +252,27 @@ Gere 3 perguntas complementares relevantes em formato JSON.`;
   try {
     const response = await chatCompletion([
       { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
+      { role: "user", content: userPrompt },
     ]);
 
     const content = response.choices[0]?.message?.content || "[]";
-    
+
     // Extrai JSON da resposta (pode vir com markdown)
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     const jsonString = jsonMatch ? jsonMatch[0] : "[]";
-    
+
     let questions: string[] = [];
     try {
       questions = JSON.parse(jsonString) as string[];
-      
+
       // Valida e filtra
       questions = questions
-        .filter(q => typeof q === "string" && q.trim().length > 0)
+        .filter((q) => typeof q === "string" && q.trim().length > 0)
         .slice(0, 3); // Máximo 3 perguntas
     } catch (parseError) {
       void logger.error("openrouter", "Failed to parse questions JSON", {
         content,
-        error: String(parseError)
+        error: String(parseError),
       });
       questions = [];
     }
@@ -269,7 +280,7 @@ Gere 3 perguntas complementares relevantes em formato JSON.`;
     const suggestions: QuestionSuggestions = {
       questions,
       context: cleanText,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Salva no cache
@@ -277,14 +288,14 @@ Gere 3 perguntas complementares relevantes em formato JSON.`;
       suggestionsCache.set(cacheKey, suggestions);
       void logger.info("openrouter", "Generated and cached questions", {
         questionCount: questions.length,
-        cacheSize: suggestionsCache.size
+        cacheSize: suggestionsCache.size,
       });
     }
 
     return suggestions;
   } catch (e) {
     void logger.error("openrouter", "Failed to generate questions", {
-      error: String(e)
+      error: String(e),
     });
     return { questions: [], context: cleanText, timestamp: Date.now() };
   }
@@ -297,7 +308,9 @@ Gere 3 perguntas complementares relevantes em formato JSON.`;
 export function clearSuggestionsCache(): void {
   const size = suggestionsCache.size;
   suggestionsCache.clear();
-  void logger.info("openrouter", "Suggestions cache cleared", { entriesCleared: size });
+  void logger.info("openrouter", "Suggestions cache cleared", {
+    entriesCleared: size,
+  });
 }
 
 /**
@@ -307,6 +320,6 @@ export function clearSuggestionsCache(): void {
 export function getCacheStats(): { size: number; keys: string[] } {
   return {
     size: suggestionsCache.size,
-    keys: Array.from(suggestionsCache.keys())
+    keys: Array.from(suggestionsCache.keys()),
   };
 }

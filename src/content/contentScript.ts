@@ -6,16 +6,22 @@
  * @module contentScript
  */
 
-import { getStoredCreateTicketUrl } from "@shared/utils";
-import { logger } from "@shared/logger";
-import { createCommentForm } from "@shared/elemento";
-import { SELECTORS, WRAPPER_ID, LIMITS } from "@shared/constants";
-import { commentStorage } from "@shared/comment-storage";
-import { isContentEmpty } from "@shared/text-utils";
-import { waitForDOMReady, debounce, waitForElement } from "@shared/dom-utils";
+import {
+  getStoredCreateTicketUrl,
+  logger,
+  SELECTORS,
+  WRAPPER_ID,
+  LIMITS,
+  isContentEmpty,
+  waitForDOMReady,
+  debounce,
+  waitForElement,
+} from "@shared/core";
+import { createCommentForm } from "@shared/ui";
+import { commentStorage, AISuggestionsManager } from "@shared/services";
 import { editorSync } from "@content/editor-sync";
-import { AISuggestionsManager } from "@shared/ai-suggestions";
-import type { StorageClearReason } from "@shared/types";
+import { initializeCustomerUsernameMonitor } from "@content/features/customer-username-validation";
+import type { StorageClearReason } from "@shared/core";
 
 /**
  * Conjunto de elementos de submit já configurados para evitar duplicação
@@ -38,12 +44,20 @@ const wiredSubmitForms = new WeakSet<HTMLFormElement>();
  * @param {StorageClearReason} reason - Razão da limpeza
  * @returns {Promise<void>}
  */
-async function clearComment(storageKey: string, textarea: HTMLTextAreaElement, reason: StorageClearReason): Promise<void> {
+async function clearComment(
+  storageKey: string,
+  textarea: HTMLTextAreaElement,
+  reason: StorageClearReason
+): Promise<void> {
   const previousValue = textarea.value;
   textarea.value = "";
   editorSync.sync("");
   textarea.focus();
-  void logger.debug("content", "Clearing stored comment", { key: storageKey, reason, previousLength: previousValue.length });
+  void logger.debug("content", "Clearing stored comment", {
+    key: storageKey,
+    reason,
+    previousLength: previousValue.length,
+  });
   await commentStorage.remove(storageKey, reason);
 }
 
@@ -56,11 +70,20 @@ async function clearComment(storageKey: string, textarea: HTMLTextAreaElement, r
  * @param {HTMLTextAreaElement} textarea - Textarea a ser monitorado
  * @returns {Promise<void>}
  */
-async function registerSubmitHandlers(storageKey: string, textarea: HTMLTextAreaElement): Promise<void> {
+async function registerSubmitHandlers(
+  storageKey: string,
+  textarea: HTMLTextAreaElement
+): Promise<void> {
   // Tenta anexar ao botão de submit
-  const submitButton = await waitForElement<HTMLElement>(SELECTORS.SUBMIT_BUTTON, LIMITS.DOM_OBSERVER_TIMEOUT_MS);
+  const submitButton = await waitForElement<HTMLElement>(
+    SELECTORS.SUBMIT_BUTTON,
+    LIMITS.DOM_OBSERVER_TIMEOUT_MS
+  );
   if (submitButton && !wiredSubmitElements.has(submitButton)) {
-    submitButton.addEventListener("click", () => void clearComment(storageKey, textarea, "button-click"));
+    submitButton.addEventListener(
+      "click",
+      () => void clearComment(storageKey, textarea, "button-click")
+    );
     wiredSubmitElements.add(submitButton);
     void logger.debug("content", "Attached submit button listener");
   }
@@ -68,7 +91,11 @@ async function registerSubmitHandlers(storageKey: string, textarea: HTMLTextArea
   // Anexa ao formulário
   const form = textarea.closest("form");
   if (form && !wiredSubmitForms.has(form)) {
-    form.addEventListener("submit", () => void clearComment(storageKey, textarea, "form-submit"), { capture: true });
+    form.addEventListener(
+      "submit",
+      () => void clearComment(storageKey, textarea, "form-submit"),
+      { capture: true }
+    );
     wiredSubmitForms.add(form);
     void logger.debug("content", "Attached form submit listener");
   }
@@ -85,7 +112,10 @@ function matchesUrl(savedUrl: string, currentUrl: string): boolean {
   try {
     const saved = new URL(savedUrl);
     const current = new URL(currentUrl);
-    return current.origin === saved.origin && current.pathname.startsWith(saved.pathname);
+    return (
+      current.origin === saved.origin &&
+      current.pathname.startsWith(saved.pathname)
+    );
   } catch {
     return currentUrl.startsWith(savedUrl);
   }
@@ -102,7 +132,7 @@ function matchesUrl(savedUrl: string, currentUrl: string): boolean {
  * @returns {Promise<void>}
  */
 async function setupTextarea(
-  textarea: HTMLTextAreaElement, 
+  textarea: HTMLTextAreaElement,
   storageKey: string,
   parentContainer: HTMLElement
 ): Promise<void> {
@@ -112,29 +142,47 @@ async function setupTextarea(
     if (saved) {
       textarea.value = saved;
       editorSync.sync(saved);
-      void logger.info("content", "Loaded saved comment", { key: storageKey, length: saved.length });
+      void logger.info("content", "Loaded saved comment", {
+        key: storageKey,
+        length: saved.length,
+      });
 
       if (!isContentEmpty(saved)) {
         await commentStorage.remove(storageKey, "after-load");
         textarea.value = "";
-        void logger.debug("content", "Cleared storage after applying to CKEditor", { key: storageKey });
+        void logger.debug(
+          "content",
+          "Cleared storage after applying to CKEditor",
+          { key: storageKey }
+        );
       }
     }
   } catch (e) {
-    void logger.warn("content", "Failed to load saved comment", { error: String(e) });
+    void logger.warn("content", "Failed to load saved comment", {
+      error: String(e),
+    });
   }
 
   // Salvar com debounce
   const saveComment = async (reason: string) => {
     try {
       await commentStorage.save(storageKey, textarea.value);
-      void logger.info("content", "Saved comment", { key: storageKey, length: textarea.value.length, reason });
+      void logger.info("content", "Saved comment", {
+        key: storageKey,
+        length: textarea.value.length,
+        reason,
+      });
     } catch (e) {
-      void logger.error("content", "Failed to save comment", { error: String(e) });
+      void logger.error("content", "Failed to save comment", {
+        error: String(e),
+      });
     }
   };
 
-  const debouncedSave = debounce(() => void saveComment("input"), LIMITS.DEBOUNCE_INPUT_MS);
+  const debouncedSave = debounce(
+    () => void saveComment("input"),
+    LIMITS.DEBOUNCE_INPUT_MS
+  );
 
   textarea.addEventListener("input", () => {
     editorSync.sync(textarea.value);
@@ -153,15 +201,25 @@ async function setupTextarea(
     const pendingReason = commentStorage.getPendingRemovalReason(storageKey);
     if (pendingReason) {
       commentStorage.clearPendingRemoval(storageKey);
-      void logger.debug("content", "Skipping storage change from local removal", { key: storageKey, reason: pendingReason });
+      void logger.debug(
+        "content",
+        "Skipping storage change from local removal",
+        { key: storageKey, reason: pendingReason }
+      );
       return;
     }
 
-    const newValue = typeof changes[storageKey].newValue === "string" ? changes[storageKey].newValue : "";
+    const newValue =
+      typeof changes[storageKey].newValue === "string"
+        ? changes[storageKey].newValue
+        : "";
     if (textarea.value !== newValue) {
       textarea.value = newValue;
       editorSync.sync(newValue);
-      void logger.debug("content", "Storage change detected", { key: storageKey, length: newValue.length });
+      void logger.debug("content", "Storage change detected", {
+        key: storageKey,
+        length: newValue.length,
+      });
     }
   });
 
@@ -171,7 +229,9 @@ async function setupTextarea(
     await aiSuggestions.initialize(textarea, parentContainer);
     void logger.info("content", "AI suggestions manager initialized");
   } catch (e) {
-    void logger.warn("content", "Failed to initialize AI suggestions", { error: String(e) });
+    void logger.warn("content", "Failed to initialize AI suggestions", {
+      error: String(e),
+    });
   }
 }
 
@@ -184,7 +244,10 @@ async function setupTextarea(
  * @returns {Promise<boolean>} True se injetado com sucesso
  */
 async function injectElement(savedUrl: string): Promise<boolean> {
-  const container = await waitForElement<HTMLDivElement>(SELECTORS.CONTAINER, LIMITS.DOM_OBSERVER_TIMEOUT_MS);
+  const container = await waitForElement<HTMLDivElement>(
+    SELECTORS.CONTAINER,
+    LIMITS.DOM_OBSERVER_TIMEOUT_MS
+  );
   if (!container) return false;
   if (container.querySelector(`#${WRAPPER_ID}`)) return true;
 
@@ -195,7 +258,10 @@ async function injectElement(savedUrl: string): Promise<boolean> {
   const elements = createCommentForm();
   wrapper.appendChild(elements.form);
   container.insertBefore(wrapper, container.firstChild);
-  void logger.info("content", "Injected comment panel (programmatic) into container");
+  void logger.info(
+    "content",
+    "Injected comment panel (programmatic) into container"
+  );
 
   const textarea = elements.textarea;
   if (!textarea) {
@@ -220,14 +286,23 @@ async function injectElement(savedUrl: string): Promise<boolean> {
 
     const currentUrl = window.location.href;
     if (!matchesUrl(savedUrl, currentUrl)) {
-      void logger.debug("content", "URL does not match saved, skipping", { savedUrl, currentUrl });
+      void logger.debug("content", "URL does not match saved, skipping", {
+        savedUrl,
+        currentUrl,
+      });
       return;
     }
 
-    void logger.info("content", "Matched saved URL, will attempt injection", { savedUrl, currentUrl });
+    void logger.info("content", "Matched saved URL, will attempt injection", {
+      savedUrl,
+      currentUrl,
+    });
     await waitForDOMReady();
+    initializeCustomerUsernameMonitor();
     await injectElement(savedUrl);
   } catch (e) {
-    void logger.error("content", "Unexpected error in main flow", { error: String(e) });
+    void logger.error("content", "Unexpected error in main flow", {
+      error: String(e),
+    });
   }
 })();
