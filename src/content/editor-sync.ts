@@ -20,8 +20,11 @@ import { logger } from "@shared/core";
 export function textToHtml(text: string): string {
   if (!text) return "<p><br></p>";
 
+  // Normaliza quebras de linha e remove tabs
+  const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\t/g, " ");
+
   // Divide por blocos de parágrafos (dupla quebra de linha)
-  const paragraphs = text.split(/\n\n+/);
+  const paragraphs = normalized.split(/\n\n+/);
 
   const htmlParagraphs = paragraphs
     .map((paragraph) => {

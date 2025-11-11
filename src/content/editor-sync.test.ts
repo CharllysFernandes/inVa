@@ -559,9 +559,12 @@ describe("CKEditorSyncManager", () => {
 
       editorSync.sync(specialText);
 
+      // Verifica que o HTML foi gerado corretamente com <br>
+      expect(editable.innerHTML).toBe('<p>Test &lt;&gt;&amp;"\'<br>Special</p>');
+      
       const paragraph = editable.querySelector("p");
       expect(paragraph).toBeDefined();
-      expect(paragraph?.textContent).toBe(specialText);
+      expect(paragraph?.querySelector("br")).toBeDefined(); // Verifica que o <br> existe
     });
 
     it("should handle rapid cleanup calls", () => {
