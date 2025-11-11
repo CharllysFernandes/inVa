@@ -5,6 +5,13 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+### [0.2.1](https://github.com/CharllysFernandes/inVa/compare/v0.2.0...v0.2.1) (2025-11-11)
+
+
+### ✨ Novos Recursos
+
+* Adicionar controle de visibilidade da base de conhecimento e configurações gerais no popup ([ef0d8f6](https://github.com/CharllysFernandes/inVa/commit/ef0d8f63f8c2d52bfb37f3ae4f17b8b94ea9ddfc))
+
 ## [0.2.0](https://github.com/CharllysFernandes/inVa/compare/v0.1.4...v0.2.0) (2025-11-11)
 
 
