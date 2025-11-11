@@ -21,6 +21,7 @@ import { createCommentForm } from "@shared/ui";
 import { commentStorage, AISuggestionsManager } from "@shared/services";
 import { editorSync } from "@content/editor-sync";
 import { initializeCustomerUsernameMonitor } from "@content/features/customer-username-validation";
+import { initializeKnowledgeBaseControl } from "@content/features/knowledge-base-control";
 import type { StorageClearReason } from "@shared/core";
 
 /**
@@ -299,6 +300,7 @@ async function injectElement(savedUrl: string): Promise<boolean> {
     });
     await waitForDOMReady();
     initializeCustomerUsernameMonitor();
+    initializeKnowledgeBaseControl();
     await injectElement(savedUrl);
   } catch (e) {
     void logger.error("content", "Unexpected error in main flow", {

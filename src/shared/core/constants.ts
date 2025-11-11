@@ -14,6 +14,7 @@
  * @property {string} OPENROUTER_API_KEY - API Key do OpenRouter
  * @property {string} OPENROUTER_SITE_URL - Site URL para OpenRouter (opcional)
  * @property {string} OPENROUTER_APP_NAME - Nome da aplicação para OpenRouter (opcional)
+ * @property {string} HIDE_KNOWLEDGE_BASE - Flag para esconder base de conhecimento
  */
 export const STORAGE_KEYS = {
   CREATE_TICKET_URL: "createTicketUrl",
@@ -22,7 +23,8 @@ export const STORAGE_KEYS = {
   COMMENT_PREFIX: "inva_comments:",
   OPENROUTER_API_KEY: "inva_openrouter_api_key",
   OPENROUTER_SITE_URL: "inva_openrouter_site_url",
-  OPENROUTER_APP_NAME: "inva_openrouter_app_name"
+  OPENROUTER_APP_NAME: "inva_openrouter_app_name",
+  HIDE_KNOWLEDGE_BASE: "inva_hide_knowledge_base",
 } as const;
 
 /**
@@ -34,13 +36,16 @@ export const STORAGE_KEYS = {
  * @property {string} IFRAME_EDITOR - Editor CKEditor em modo iframe
  * @property {string} INLINE_EDITOR - Editor CKEditor em modo inline
  * @property {string} TEXTAREA - Textarea de comentários
+ * @property {string} KNOWLEDGE_BASE_ARTICLES - Div de artigos da base de conhecimento
  */
 export const SELECTORS = {
   SUBMIT_BUTTON: "#submit_button.button-blue",
-  CONTAINER: ".category_step1, #category_step1, div.category_step1, div#category_step1",
+  CONTAINER:
+    ".category_step1, #category_step1, div.category_step1, div#category_step1",
   IFRAME_EDITOR: ".cke_wysiwyg_frame",
   INLINE_EDITOR: ".cke_editable",
-  TEXTAREA: "#comments"
+  TEXTAREA: "#comments",
+  KNOWLEDGE_BASE_ARTICLES: "#featured_kb_articles",
 } as const;
 
 /**
@@ -52,7 +57,7 @@ export const SELECTORS = {
  */
 export const ELEMENT_IDS = {
   COMMENTS_TEXTAREA: "comments",
-  FORM_STYLES: "inva-comment-form-styles"
+  FORM_STYLES: "inva-comment-form-styles",
 } as const;
 
 /**
@@ -66,7 +71,7 @@ export const ELEMENT_IDS = {
 export const CSS_CLASSES = {
   COMMENT_FORM: "inva-comment-form",
   COMMENT_HEADER: "inva-comment-header",
-  COMMENT_TEXTAREA: "inva-comment-textarea"
+  COMMENT_TEXTAREA: "inva-comment-textarea",
 } as const;
 
 /**
@@ -88,7 +93,7 @@ export const LIMITS = {
   STABILITY_REQUIRED_MATCHES: 4,
   DOM_OBSERVER_TIMEOUT_MS: 10000,
   DEBOUNCE_INPUT_MS: 600,
-  STATUS_MESSAGE_DURATION_MS: 1500
+  STATUS_MESSAGE_DURATION_MS: 1500,
 } as const;
 
 /**

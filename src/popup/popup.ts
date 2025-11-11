@@ -12,6 +12,7 @@ import {
   getStoredOpenRouterConfig,
   saveOpenRouterConfig,
   type OpenRouterConfig,
+  STORAGE_KEYS,
 } from "@shared/core";
 import { debugAPI, logger } from "@shared/core";
 import { LIMITS } from "@shared/core";
@@ -43,6 +44,17 @@ const testOpenRouterButton = document.getElementById(
 );
 const openrouterStatus = document.getElementById(
   "openrouterStatus"
+) as HTMLParagraphElement | null;
+
+// Elementos de configurações gerais
+const hideKnowledgeBaseCheckbox = document.getElementById(
+  "hideKnowledgeBase"
+) as HTMLInputElement | null;
+const saveGeneralSettingsButton = document.getElementById(
+  "saveGeneralSettings"
+);
+const generalSettingsStatus = document.getElementById(
+  "generalSettingsStatus"
 ) as HTMLParagraphElement | null;
 
 const debugEnabledCheckbox = document.getElementById(
@@ -95,6 +107,19 @@ try {
     }
     void logger.debug("popup", "Loaded OpenRouter config", {
       hasApiKey: Boolean(openRouterConfig.apiKey),
+    });
+
+    // Carrega configuração de esconder base de conhecimento
+    const result = await chrome.storage.local.get(
+      STORAGE_KEYS.HIDE_KNOWLEDGE_BASE
+    );
+    if (hideKnowledgeBaseCheckbox) {
+      hideKnowledgeBaseCheckbox.checked = Boolean(
+        result[STORAGE_KEYS.HIDE_KNOWLEDGE_BASE]
+      );
+    }
+    void logger.debug("popup", "Loaded hide knowledge base setting", {
+      enabled: Boolean(result[STORAGE_KEYS.HIDE_KNOWLEDGE_BASE]),
     });
 
     // estado inicial do debug
@@ -240,6 +265,46 @@ saveOpenRouterButton?.addEventListener("click", async () => {
       openrouterStatus.textContent = "Falha ao salvar";
       openrouterStatus.style.color = "#dc2626";
       openrouterStatus.hidden = false;
+    }
+  }
+});
+
+/**
+ * Event listener para salvar configurações gerais
+ * Salva preferências como esconder base de conhecimento
+ */
+saveGeneralSettingsButton?.addEventListener("click", async () => {
+  const hideKnowledgeBase = Boolean(hideKnowledgeBaseCheckbox?.checked);
+
+  void logger.debug("popup", "Attempting to save general settings", {
+    hideKnowledgeBase,
+  });
+
+  try {
+    await chrome.storage.local.set({
+      [STORAGE_KEYS.HIDE_KNOWLEDGE_BASE]: hideKnowledgeBase,
+    });
+
+    void logger.info("popup", "General settings saved via popup", {
+      hideKnowledgeBase,
+    });
+
+    if (generalSettingsStatus) {
+      generalSettingsStatus.textContent = "Configurações salvas!";
+      generalSettingsStatus.hidden = false;
+      setTimeout(() => {
+        if (generalSettingsStatus) {
+          generalSettingsStatus.hidden = true;
+        }
+      }, LIMITS.STATUS_MESSAGE_DURATION_MS);
+    }
+  } catch (e) {
+    void logger.error("popup", "Failed to save general settings", {
+      error: String(e),
+    });
+    if (generalSettingsStatus) {
+      generalSettingsStatus.textContent = "Falha ao salvar";
+      generalSettingsStatus.hidden = false;
     }
   }
 });
