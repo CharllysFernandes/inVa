@@ -5,6 +5,23 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [0.2.0](https://github.com/CharllysFernandes/inVa/compare/v0.1.4...v0.2.0) (2025-11-11)
+
+
+### 📚 Documentação
+
+* adicionar documentação da Wiki para usuários ([6ebd5b5](https://github.com/CharllysFernandes/inVa/commit/6ebd5b52c8f6a0a0fcc8b6e5d79e7d11e33cc378))
+
+
+### 🐛 Correções de Bugs
+
+* update OpenRouter model to google/gemini-flash-1.5 and implement AI suggestions manager ([93b3470](https://github.com/CharllysFernandes/inVa/commit/93b3470e5b9996934f9b1affd4295515d9d75f2f))
+
+
+### ✨ Novos Recursos
+
+* Implement comment storage management with rate limiting and UI components ([28fc1ad](https://github.com/CharllysFernandes/inVa/commit/28fc1ad76781fb73f4513610326c2e257849cd1d))
+
 ### 0.1.4 (2025-11-01)
 
 
