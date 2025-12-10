@@ -22,6 +22,7 @@ import { commentStorage, AISuggestionsManager } from "@shared/services";
 import { editorSync } from "@content/editor-sync";
 import { initializeCustomerUsernameMonitor } from "@content/features/customer-username-validation";
 import { initializeKnowledgeBaseControl } from "@content/features/knowledge-base-control";
+import { initializeActivityMessageMonitor } from "@content/features/activity-message-monitor";
 import type { StorageClearReason } from "@shared/core";
 
 /**
@@ -282,8 +283,14 @@ async function injectElement(savedUrl: string): Promise<boolean> {
  */
 (async () => {
   try {
+    await waitForDOMReady();
+    initializeActivityMessageMonitor();
+
     const savedUrl = await getStoredCreateTicketUrl();
-    if (!savedUrl) return;
+    if (!savedUrl) {
+      void logger.debug("content", "No saved ticket URL found; skipping form injection");
+      return;
+    }
 
     const currentUrl = window.location.href;
     if (!matchesUrl(savedUrl, currentUrl)) {
@@ -298,7 +305,6 @@ async function injectElement(savedUrl: string): Promise<boolean> {
       savedUrl,
       currentUrl,
     });
-    await waitForDOMReady();
     initializeCustomerUsernameMonitor();
     initializeKnowledgeBaseControl();
     await injectElement(savedUrl);

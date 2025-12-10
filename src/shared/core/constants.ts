@@ -37,6 +37,8 @@ export const STORAGE_KEYS = {
  * @property {string} INLINE_EDITOR - Editor CKEditor em modo inline
  * @property {string} TEXTAREA - Textarea de comentários
  * @property {string} KNOWLEDGE_BASE_ARTICLES - Div de artigos da base de conhecimento
+ * @property {string} ACTIVITY_MESSAGE_ARTICLES - Lista de artigos das mensagens de atividade
+ * @property {string} KNOWLEDGE_BASE_LOADER - Loader exibido dentro da seção kb
  */
 export const SELECTORS = {
   SUBMIT_BUTTON: "#submit_button.button-blue",
@@ -46,6 +48,8 @@ export const SELECTORS = {
   INLINE_EDITOR: ".cke_editable",
   TEXTAREA: "#comments",
   KNOWLEDGE_BASE_ARTICLES: "#featured_kb_articles",
+  ACTIVITY_MESSAGE_ARTICLES: ".activity-message__articles",
+  KNOWLEDGE_BASE_LOADER: "#kb_box .section-box__loader",
 } as const;
 
 /**
