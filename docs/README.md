@@ -1,97 +1,148 @@
-# 📚 Documentação do Projeto inVa
+# inVa
 
-Esta pasta contém toda a documentação técnica do projeto.
+Extensão para Google Chrome e Microsoft Edge escrita em TypeScript cujo objetivo é agilizar o fluxo de criação de chamados na plataforma **InvGate Service Desk**. Ela injeta um painel assistente dentro da página de criação de incidentes, permite salvar temporariamente rascunhos de comentários, sincroniza esse texto com o CKEditor utilizado pela aplicação e remove o conteúdo do armazenamento assim que o envio ocorre – mantendo o campo pronto para o próximo atendimento. O popup da extensão também oferece um painel de diagnóstico para habilitar logs detalhados e configurar a URL de criação de tickets utilizada como gatilho para o conteúdo.
 
-## 📋 Índice de Documentos
+## Aviso legal
 
-### 🤖 Funcionalidades com IA
+- **InvGate** é uma marca e plataforma pertencente aos seus respectivos proprietários.
+- Este projeto não é afiliado, mantido, patrocinado ou endossado pela InvGate.
+- A extensão foi desenvolvida de forma independente, com fins de prototipagem e aumento de produtividade, e não altera o código-fonte original da aplicação InvGate.
+- Ao utilizá-la, verifique as políticas internas da sua organização e os termos de uso da plataforma para assegurar conformidade jurídica e contratual.
 
-- **[AI_SUGGESTIONS.md](./AI_SUGGESTIONS.md)** - Geração automática de perguntas complementares com IA
+## Principais funcionalidades
 
-### 🔒 Segurança
+- Armazena rascunhos de comentários localmente enquanto o usuário prepara o chamado.
+- Replica automaticamente o texto salvo para o CKEditor da página InvGate, evitando retrabalho.
+- Limpa o rascunho do `localStorage` após o envio do formulário, mantendo o campo disponível para novas anotações.
+- Disponibiliza no popup um painel com logo, status de versão, configuração da URL monitorada e ferramentas de debug (visualização/limpeza de logs, alternância de modo debug).
+- Construída inteiramente em TypeScript, utilizando ferramentas modernas (webpack, manifest V3) para facilitar evolução e manutenção.
 
-- **[CONTENT_SECURITY_POLICY.md](./CONTENT_SECURITY_POLICY.md)** - Implementação e detalhes da Content Security Policy
-- **[SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md)** - Checklist de segurança para desenvolvimento
+## Pré-requisitos
 
-### 🧪 Testes e Qualidade
+- [Node.js](https://nodejs.org/) (versão 18 ou superior recomendada)
+- npm ou pnpm para gerenciamento de dependências
 
-- **[TESTING.md](./TESTING.md)** - Guia completo de testes unitários e cobertura
+## Como começar
 
-### 🚀 Build, Release e Versionamento
+1. Instale as dependências:
 
-- **[BUILD_AND_RELEASE.md](./BUILD_AND_RELEASE.md)** - Guia completo de build e release para GitHub
-- **[VERSIONING.md](./VERSIONING.md)** - Guia completo de versionamento automático com conventional commits
-- **[RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)** - Checklist completo para releases
+   ```bash
+   npm install
+   ```
 
-## 🗂️ Organização
+2. Gere os arquivos da extensão em `dist/`:
 
-Cada documento foi criado com um propósito específico:
+   ```bash
+   npm run build
+   ```
 
-| Documento                    | Propósito                                    | Quando Consultar                       |
-| ---------------------------- | -------------------------------------------- | -------------------------------------- |
-| `AI_SUGGESTIONS.md`          | Funcionalidade de sugestões de IA            | Ao trabalhar com integração OpenRouter |
-| `CONTENT_SECURITY_POLICY.md` | Entender e manter a CSP da extensão          | Ao adicionar scripts ou recursos       |
-| `SECURITY_CHECKLIST.md`      | Garantir práticas de código seguro           | Antes de commits e code reviews        |
-| `TESTING.md`                 | Criar e executar testes                      | Ao adicionar funcionalidades           |
-| `BUILD_AND_RELEASE.md`       | Build e publicação no GitHub                 | Ao criar releases                      |
-| `VERSIONING.md`              | Criar releases e seguir conventional commits | Ao fazer commits e releases            |
-| `RELEASE_CHECKLIST.md`       | Processo completo de release                 | Antes e durante cada release           |
+   Para desenvolvimento contínuo utilize o modo de observação:
 
-## 🔍 Guia Rápido por Tarefa
+   ```bash
+   npm run watch
+   ```
 
-### Você quer adicionar uma nova funcionalidade?
+3. Carregue a pasta `dist/` como extensão não empacotada:
+   - Chrome: `chrome://extensions`
+   - Edge: `edge://extensions`
+   - Ative o modo desenvolvedor e escolha **Load unpacked** / **Carregar sem compactação**.
 
-1. Leia [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) - Práticas seguras
-2. Desenvolva seguindo [CONTENT_SECURITY_POLICY.md](./CONTENT_SECURITY_POLICY.md) - Restrições de CSP
-3. Adicione testes conforme [TESTING.md](./TESTING.md)
-4. Faça commit seguindo [VERSIONING.md](./VERSIONING.md) - Conventional commits
+## Scripts disponíveis
 
-### Você quer fazer um release?
+### Build e Desenvolvimento
 
-1. Siga [BUILD_AND_RELEASE.md](./BUILD_AND_RELEASE.md) - Guia completo de build
-2. Use [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) - Checklist completo
-3. Consulte [VERSIONING.md](./VERSIONING.md) - Comandos de release
+- `npm run build`: gera uma versão otimizada para distribuição.
+- `npm run watch`: recompila automaticamente ao alterar os arquivos fonte.
+- `npm run dev`: compila em modo desenvolvimento.
+- `npm run clean`: remove a pasta `dist/`.
+- `npm run typecheck`: executa o TypeScript apenas para verificação de tipos.
 
-### Você encontrou um problema de segurança?
+### Testes
 
-1. Consulte [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) - Verificações
-2. Revise [CONTENT_SECURITY_POLICY.md](./CONTENT_SECURITY_POLICY.md) - Políticas
+- `npm test`: executa os testes em modo watch.
+- `npm run test:ui`: abre a interface visual do Vitest.
+- `npm run test:coverage`: gera relatório de cobertura de testes.
+- `npm run test:security`: valida Content Security Policy e práticas de segurança.
 
-### Você precisa adicionar testes?
+### Versionamento
 
-1. Consulte [TESTING.md](./TESTING.md) - Estrutura e exemplos
-2. Execute `npm test` para validar
+- `npm run release`: cria uma nova versão automaticamente baseada nos commits.
+- `npm run release:patch`: cria uma versão patch (0.1.0 → 0.1.1).
+- `npm run release:minor`: cria uma versão minor (0.1.0 → 0.2.0).
+- `npm run release:major`: cria uma versão major (0.1.0 → 1.0.0).
 
-## 📖 Documentação Externa
+Para mais detalhes sobre versionamento, consulte [VERSIONING.md](./VERSIONING.md).
 
-### Wiki do Projeto (Para Usuários)
+## Estrutura dos diretórios
 
-- **[Wiki no GitHub](https://github.com/CharllysFernandes/inVa/wiki)** - Documentação completa para usuários
-  - [Instalação](https://github.com/CharllysFernandes/inVa/wiki/Instalação)
-  - [Como Usar](https://github.com/CharllysFernandes/inVa/wiki/Como-Usar)
-  - [FAQ](https://github.com/CharllysFernandes/inVa/wiki/FAQ)
-- **[WIKI.md](./WIKI.md)** - Guia de manutenção da Wiki
+```
+src/
+├── background/         # Service worker (MV3)
+│   └── background.ts
+├── content/           # Scripts injetados nas páginas
+│   ├── contentScript.ts  # Orquestração principal
+│   └── editor-sync.ts    # Sincronização CKEditor
+├── popup/             # Interface do popup
+│   ├── popup.ts
+│   ├── popup.html
+│   └── popup.css
+└── shared/            # Módulos compartilhados
+    ├── constants.ts      # Constantes centralizadas
+    ├── types.ts          # Definições de tipos TypeScript
+    ├── logger.ts         # Sistema de logging
+    ├── utils.ts          # Utilitários de storage de URL
+    ├── comment-storage.ts # Gerenciador de comentários
+    ├── text-utils.ts     # Normalização de texto
+    ├── dom-utils.ts      # Helpers de DOM
+    └── elemento.ts       # Template HTML injetado
+```
 
-### Documentação do Projeto
+### Arquitetura modularizada
 
-- **[README.md](../README.md)** - Raiz do projeto, guia de instalação e uso
+O projeto foi organizado seguindo princípios SOLID e boas práticas TypeScript:
 
-## 🛠️ Manutenção desta Documentação
+- **Separação de responsabilidades**: cada módulo tem uma função clara e única
+- **Injeção de dependências**: uso de módulos singleton exportados (`editorSync`, `commentStorage`)
+- **Constantes centralizadas**: seletores, limites e chaves de storage em `constants.ts`
+- **Tipagem forte**: tipos compartilhados em `types.ts` evitam duplicação
+- **Utilitários reutilizáveis**: helpers de DOM, texto e debounce isolados
+- **Manager classes**: `CKEditorSyncManager` e `CommentStorageManager` encapsulam estado e lógica complexa
+- **Factory functions**: `createCommentForm()` cria elementos programaticamente com type-safety
+- **CSS modular**: estilos encapsulados com prefixo `inva-` evitam conflitos
 
-Ao atualizar a documentação:
+## 🔒 Segurança
 
-- ✅ Mantenha exemplos práticos e atualizados
-- ✅ Use formatação Markdown consistente
-- ✅ Inclua tabelas e checklists quando útil
-- ✅ Adicione emojis para facilitar navegação
-- ✅ Mantenha este índice atualizado
+A extensão implementa uma **Content Security Policy (CSP) rigorosa** para proteção contra:
 
-## 📝 Histórico de Mudanças
+- ✅ **Cross-Site Scripting (XSS)**: Bloqueia execução de scripts não autorizados
+- ✅ **Code Injection**: Previne `eval()` e `new Function()`
+- ✅ **Clickjacking**: Impede incorporação em iframes maliciosos
+- ✅ **Data Exfiltration**: Restringe conexões a domínios externos
+- ✅ **Plugins maliciosos**: Bloqueia Flash, Java e outros plugins
 
-Para ver o histórico de mudanças do projeto:
+### Políticas implementadas
 
-- **[CHANGELOG.md](../CHANGELOG.md)** - Changelog gerado automaticamente
+```json
+{
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests;"
+  }
+}
+```
 
----
+Além disso, o código segue práticas seguras:
 
-**Última atualização:** 31 de outubro de 2025
+- ❌ Sem scripts inline no HTML
+- ❌ Sem event handlers inline (`onclick`, etc.)
+- ❌ Sem uso de `eval()` ou `new Function()`
+- ✅ Event listeners via `addEventListener()`
+- ✅ Uso de `textContent` ao invés de `innerHTML` com dados não confiáveis
+- ✅ Validação de entradas do usuário
+
+Para mais detalhes, consulte [docs/CONTENT_SECURITY_POLICY.md](./docs/CONTENT_SECURITY_POLICY.md).
+
+## Próximos passos sugeridos
+
+- Adicionar ícones em diferentes resoluções na pasta `dist/icons` e referenciar no `manifest.json`.
+- Implementar testes unitários para funções de utilidade em `src/shared`.
+- Publicar a extensão nas lojas oficiais após revisar permissões e políticas.
