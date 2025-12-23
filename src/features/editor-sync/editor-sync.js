@@ -13,7 +13,7 @@ function restoreCKEditorDescription() {
 
         // Usar somente o fallback: inserir diretamente no iframe correspondente
         // (removida a tentativa de usar CKEDITOR API conforme solicitado)
-        
+
         // Fallback: inserir diretamente no iframe correspondente
         const iframe = document.querySelector(`#cke_${textareaId} iframe.cke_wysiwyg_frame`);
         if (iframe) {
