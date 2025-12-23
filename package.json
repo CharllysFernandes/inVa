@@ -2,10 +2,12 @@
   "name": "browser-extension",
   "version": "1.0.0",
   "description": "Extensão para Chrome/Edge",
+  "type": "module",
   "scripts": {
-    "build": "node build.js",
-    "dev": "node build.js --dev",
-    "package": "node build.js --package"
+    "build": "node scripts/build.js",
+    "dev": "node scripts/build.js --dev",
+    "package": "node scripts/build.js --package",
+    "test": "node tests/urlType.assert.test.js"
   },
   "devDependencies": {
     "fs-extra": "^11.0.0"
