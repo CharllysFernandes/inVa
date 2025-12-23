@@ -17,6 +17,7 @@ const urlType = window.getUrlType(currentUrl);
 
 
 
+
 if (urlType === 'TICKET_CREATE') {
     console.log('Página de criação de ticket detectada.');
     // chame a função editor sync

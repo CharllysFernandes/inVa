@@ -1,3 +1,4 @@
+// Restaura o valor salvo no body do CKEditor assim que estiver disponível
 // Utiliza constantes globais para IDs e storage
 const CATEGORY_STEP1_ID = window.CATEGORY_STEP1_ID || 'category_step1';
 const REQUEST_DESCRIPTION_ID = window.REQUEST_DESCRIPTION_ID || 'request_description';
