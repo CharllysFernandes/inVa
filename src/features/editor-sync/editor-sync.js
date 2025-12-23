@@ -11,19 +11,10 @@ function restoreCKEditorDescription() {
         const textarea = document.getElementById(textareaId);
         if (!textarea) return false;
 
-        // 1) Usar CKEditor API se disponível
-        try {
-            if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances[textareaId]) {
-                CKEDITOR.instances[textareaId].setData(value || '');
-                textarea.value = value || '';
-                console.log('[CKEditor][API] Valor restaurado via CKEDITOR.setData:', value);
-                return true;
-            }
-        } catch (e) {
-            console.warn('CKEDITOR API error:', e);
-        }
-
-        // 2) Fallback: inserir diretamente no iframe correspondente
+        // Usar somente o fallback: inserir diretamente no iframe correspondente
+        // (removida a tentativa de usar CKEDITOR API conforme solicitado)
+        
+        // Fallback: inserir diretamente no iframe correspondente
         const iframe = document.querySelector(`#cke_${textareaId} iframe.cke_wysiwyg_frame`);
         if (iframe) {
             try {
