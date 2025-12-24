@@ -11,39 +11,41 @@ function featured_kb_articles() {
 
     // Aguarda até o timeout definido para o elemento featured_kb_articles
     const timeoutMs = window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_TIMEOUT || 300000; // fallback
-    window.waitForElement('#featured_kb_articles', timeoutMs).then((found) => {
+    const elementSelector = `#${window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_ELEMENT_ID}`;
+    const storageKey = window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_STORAGE_KEY;
+    window.waitForElement(elementSelector, timeoutMs).then((found) => {
         if (!found) {
-            console.warn('Elemento #featured_kb_articles não encontrado após', timeoutMs / 1000, 'segundos.');
+            console.warn(`Elemento ${elementSelector} não encontrado após`, timeoutMs / 1000, 'segundos.');
             return;
         }
 
-        console.log('Elemento #featured_kb_articles encontrado. Aplicando configuração.');
+        console.log(`Elemento ${elementSelector} encontrado. Aplicando configuração.`);
 
         // Carrega o valor de switch_kb_featured_articles
         try {
-            chrome.storage.local.get(['switch_kb_featured_articles'], (result) => {
-                const savedValue = result.switch_kb_featured_articles;
-                console.log('Valor salvo para switch_kb_featured_articles (chrome.storage):', savedValue);
+            chrome.storage.local.get([storageKey], (result) => {
+                const savedValue = result[storageKey];
+                console.log(`Valor salvo para ${storageKey} (chrome.storage):`, savedValue);
                 const shouldHide = savedValue === true;
                 applyKbVisibility(shouldHide);
             });
         } catch (e) {
             console.warn('chrome.storage não disponível, usando localStorage:', e);
             // fallback para localStorage da página
-            const savedValue = localStorage.getItem('switch_kb_featured_articles');
-            console.log('Valor salvo para switch_kb_featured_articles (localStorage):', savedValue);
+            const savedValue = localStorage.getItem(storageKey);
+            console.log(`Valor salvo para ${storageKey} (localStorage):`, savedValue);
             const shouldHide = savedValue === 'true';
             applyKbVisibility(shouldHide);
         }
     });
 
     function applyKbVisibility(shouldHide) {
-        const el = document.getElementById('featured_kb_articles');
+        const el = document.getElementById(window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_ELEMENT_ID);
         if (el) {
             el.style.display = shouldHide ? 'none' : '';
             console.log('KB Featured Articles: visibilidade aplicada:', shouldHide ? 'oculto' : 'visível');
         } else {
-            console.log('Elemento featured_kb_articles não encontrado na aplicação.');
+            console.log(`Elemento ${window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_ELEMENT_ID} não encontrado na aplicação.`);
         }
     }
 }

@@ -18,4 +18,6 @@ window.INVA_CONSTANTS.REQUEST_DESCRIPTION_STORAGE_KEY = 'request_description_tex
 
 // KB Featured Articles
 window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_TIMEOUT = 300000; // 5 minutos em ms
+window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_STORAGE_KEY = 'switch_kb_featured_articles';
+window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_ELEMENT_ID = 'featured_kb_articles';
 

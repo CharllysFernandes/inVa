@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Carregar valor salvo do checkbox
   try {
-    chrome.storage.local.get(['switch_kb_featured_articles'], (result) => {
-      const savedValue = result.switch_kb_featured_articles;
+    chrome.storage.local.get([window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_STORAGE_KEY], (result) => {
+      const savedValue = result[window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_STORAGE_KEY];
       console.log('Valor carregado do chrome.storage para switch_kb_featured_articles:', savedValue);
       if (savedValue !== undefined) {
         hideKnowledgeBaseCheckbox.checked = savedValue === true;
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (e) {
     console.warn('chrome.storage não disponível:', e);
     // fallback para localStorage (não recomendado)
-    const savedValue = localStorage.getItem('switch_kb_featured_articles');
+    const savedValue = localStorage.getItem(window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_STORAGE_KEY);
     console.log('Fallback: Valor carregado do localStorage para switch_kb_featured_articles:', savedValue);
     if (savedValue !== null) {
       hideKnowledgeBaseCheckbox.checked = savedValue === 'true';
@@ -37,7 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
   saveGeneralSettingsBtn.addEventListener('click', () => {
     const isChecked = hideKnowledgeBaseCheckbox.checked;
     try {
-      chrome.storage.local.set({ switch_kb_featured_articles: isChecked }, () => {
+      const storageObj = {};
+      storageObj[window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_STORAGE_KEY] = isChecked;
+      chrome.storage.local.set(storageObj, () => {
         if (chrome.runtime.lastError) {
           console.error('Erro ao salvar no chrome.storage:', chrome.runtime.lastError);
           generalSettingsStatus.textContent = 'Erro ao salvar!';
@@ -50,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.warn('chrome.storage não disponível, usando localStorage:', e);
       // fallback
-      localStorage.setItem('switch_kb_featured_articles', isChecked.toString());
+      localStorage.setItem(window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_STORAGE_KEY, isChecked.toString());
       generalSettingsStatus.textContent = 'Salvo localmente!';
       generalSettingsStatus.hidden = false;
       setTimeout(() => (generalSettingsStatus.hidden = true), 2000);
