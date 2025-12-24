@@ -16,3 +16,6 @@ window.INVA_CONSTANTS.CATEGORY_STEP1_ID = 'category_step1';
 window.INVA_CONSTANTS.REQUEST_DESCRIPTION_ID = 'request_description';
 window.INVA_CONSTANTS.REQUEST_DESCRIPTION_STORAGE_KEY = 'request_description_text';
 
+// KB Featured Articles
+window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_TIMEOUT = 300000; // 5 minutos em ms
+

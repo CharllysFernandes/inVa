@@ -17,23 +17,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Carregar valor salvo do checkbox
   try {
+    chrome.storage.local.get(['switch_kb_featured_articles'], (result) => {
+      const savedValue = result.switch_kb_featured_articles;
+      console.log('Valor carregado do chrome.storage para switch_kb_featured_articles:', savedValue);
+      if (savedValue !== undefined) {
+        hideKnowledgeBaseCheckbox.checked = savedValue === true;
+      }
+    });
+  } catch (e) {
+    console.warn('chrome.storage não disponível:', e);
+    // fallback para localStorage (não recomendado)
     const savedValue = localStorage.getItem('switch_kb_featured_articles');
+    console.log('Fallback: Valor carregado do localStorage para switch_kb_featured_articles:', savedValue);
     if (savedValue !== null) {
       hideKnowledgeBaseCheckbox.checked = savedValue === 'true';
     }
-  } catch (e) {
-    // ignore
   }
 
   saveGeneralSettingsBtn.addEventListener('click', () => {
     const isChecked = hideKnowledgeBaseCheckbox.checked;
     try {
-      localStorage.setItem('switch_kb_featured_articles', isChecked.toString());
-      generalSettingsStatus.textContent = 'Salvo!';
-      generalSettingsStatus.hidden = false;
-      setTimeout(() => (generalSettingsStatus.hidden = true), 2000);
+      chrome.storage.local.set({ switch_kb_featured_articles: isChecked }, () => {
+        if (chrome.runtime.lastError) {
+          console.error('Erro ao salvar no chrome.storage:', chrome.runtime.lastError);
+          generalSettingsStatus.textContent = 'Erro ao salvar!';
+        } else {
+          generalSettingsStatus.textContent = 'Salvo!';
+        }
+        generalSettingsStatus.hidden = false;
+        setTimeout(() => (generalSettingsStatus.hidden = true), 2000);
+      });
     } catch (e) {
-      generalSettingsStatus.textContent = 'Erro ao salvar!';
+      console.warn('chrome.storage não disponível, usando localStorage:', e);
+      // fallback
+      localStorage.setItem('switch_kb_featured_articles', isChecked.toString());
+      generalSettingsStatus.textContent = 'Salvo localmente!';
       generalSettingsStatus.hidden = false;
       setTimeout(() => (generalSettingsStatus.hidden = true), 2000);
     }
