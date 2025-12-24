@@ -1,9 +1,6 @@
 // popup.js - controla o popup da extensão
 document.addEventListener('DOMContentLoaded', () => {
-  const saveBtn = document.getElementById('saveBtn');
-  const flowUrl = document.getElementById('flowUrl');
-  const status = document.getElementById('status');
-  const versionEl = document.getElementById('version');
+  const versionEl = document.getElementById('appVersion');
 
   // Preencher versão se houver runtime (quando estiver empacotado como extensão)
   try {
@@ -13,82 +10,77 @@ document.addEventListener('DOMContentLoaded', () => {
     // fallback: manter texto já presente
   }
 
-  // Carregar valor salvo
+  // Configurações Gerais
+  const hideKnowledgeBaseCheckbox = document.getElementById('hideKnowledgeBase');
+  const saveGeneralSettingsBtn = document.getElementById('saveGeneralSettings');
+  const generalSettingsStatus = document.getElementById('generalSettingsStatus');
+
+  // Carregar valor salvo do checkbox
   try {
-    chrome.storage.local.get(['flowUrl'], (res) => {
-      if (res && res.flowUrl) flowUrl.value = res.flowUrl;
-    });
+    const savedValue = localStorage.getItem('switch_kb_featured_articles');
+    if (savedValue !== null) {
+      hideKnowledgeBaseCheckbox.checked = savedValue === 'true';
+    }
   } catch (e) {
-    // não está em contexto de extensão
+    // ignore
   }
 
-  saveBtn.addEventListener('click', () => {
-    const url = flowUrl.value?.trim() || '';
-    if (!url) {
-      status.textContent = 'Por favor digite uma URL válida.';
-      return;
-    }
-
+  saveGeneralSettingsBtn.addEventListener('click', () => {
+    const isChecked = hideKnowledgeBaseCheckbox.checked;
     try {
-      chrome.storage.local.set({ flowUrl: url }, () => {
-        status.textContent = 'URL salva';
-        setTimeout(() => (status.textContent = ''), 2000);
-      });
+      localStorage.setItem('switch_kb_featured_articles', isChecked.toString());
+      generalSettingsStatus.textContent = 'Salvo!';
+      generalSettingsStatus.hidden = false;
+      setTimeout(() => (generalSettingsStatus.hidden = true), 2000);
     } catch (e) {
-      status.textContent = 'Não foi possível salvar (modo não-extensão).';
+      generalSettingsStatus.textContent = 'Erro ao salvar!';
+      generalSettingsStatus.hidden = false;
+      setTimeout(() => (generalSettingsStatus.hidden = true), 2000);
     }
   });
-  const saveCreateTicketUrlBtn = document.getElementById('saveCreateTicketUrl');
-  const createTicketUrlInput = document.getElementById('createTicketUrl');
-  const saveStatus = document.getElementById('saveStatus');
 
-  // Carregar valor salvo
-  try {
-    chrome.storage.local.get(['createTicketUrl'], (res) => {
-      if (res && res.createTicketUrl) createTicketUrlInput.value = res.createTicketUrl;
+  // OpenRouter (placeholder - implementar se necessário)
+  const saveOpenRouterConfigBtn = document.getElementById('saveOpenRouterConfig');
+  const testOpenRouterConnectionBtn = document.getElementById('testOpenRouterConnection');
+  const openrouterStatus = document.getElementById('openrouterStatus');
+
+  if (saveOpenRouterConfigBtn) {
+    saveOpenRouterConfigBtn.addEventListener('click', () => {
+      // TODO: implementar salvamento da API key
+      openrouterStatus.textContent = 'Funcionalidade não implementada';
+      openrouterStatus.hidden = false;
+      setTimeout(() => (openrouterStatus.hidden = true), 2000);
     });
-  } catch (e) {
-    // não está em contexto de extensão
-    const localUrl = localStorage.getItem('createTicketUrl');
-    if (localUrl) createTicketUrlInput.value = localUrl;
   }
 
-  saveCreateTicketUrlBtn.addEventListener('click', () => {
-    const url = createTicketUrlInput.value?.trim() || '';
-    if (!url) {
-      saveStatus.textContent = 'Por favor digite uma URL válida.';
-      saveStatus.hidden = false;
-      return;
-    }
-    // Salvar no localStorage
-    localStorage.setItem('createTicketUrl', url);
-    // Salvar no chrome.storage.local
-    try {
-      chrome.storage.local.set({ createTicketUrl: url }, () => {
-        saveStatus.textContent = 'Salvo!';
-        saveStatus.hidden = false;
-        setTimeout(() => (saveStatus.hidden = true), 2000);
-      });
-    } catch (e) {
-      saveStatus.textContent = 'Salvo localmente!';
-      saveStatus.hidden = false;
-      setTimeout(() => (saveStatus.hidden = true), 2000);
-    }
-  });
-});
-document.getElementById('actionBtn').addEventListener('click', async () => {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (testOpenRouterConnectionBtn) {
+    testOpenRouterConnectionBtn.addEventListener('click', () => {
+      // TODO: implementar teste de conexão
+      openrouterStatus.textContent = 'Funcionalidade não implementada';
+      openrouterStatus.hidden = false;
+      setTimeout(() => (openrouterStatus.hidden = true), 2000);
+    });
+  }
 
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    function: () => {
-      alert('Extensão funcionando!');
-    }
-  });
+  // Diagnóstico (placeholder)
+  const debugEnabledCheckbox = document.getElementById('debugEnabled');
+  const viewLogsBtn = document.getElementById('viewLogs');
+  const clearLogsBtn = document.getElementById('clearLogs');
+  const logsOutput = document.getElementById('logsOutput');
 
-  document.getElementById('result').textContent = 'Ação executada!';
-});
+  if (viewLogsBtn) {
+    viewLogsBtn.addEventListener('click', () => {
+      // TODO: implementar visualização de logs
+      logsOutput.textContent = 'Logs não disponíveis';
+      logsOutput.hidden = false;
+    });
+  }
 
-document.getElementById('settingsBtn').addEventListener('click', () => {
-  chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html') });
+  if (clearLogsBtn) {
+    clearLogsBtn.addEventListener('click', () => {
+      // TODO: implementar limpeza de logs
+      logsOutput.textContent = '';
+      logsOutput.hidden = true;
+    });
+  }
 });
