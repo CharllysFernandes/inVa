@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  saveGeneralSettingsBtn.addEventListener('click', () => {
+  saveGeneralSettingsBtn.addEventListener('click', async () => {
     const isChecked = hideKnowledgeBaseCheckbox.checked;
     try {
       const storageObj = {};
@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
           generalSettingsStatus.textContent = 'Erro ao salvar!';
         } else {
           generalSettingsStatus.textContent = 'Salvo!';
+          // Aplicar mudança na página ativa, se aplicável
+          applyToActiveTab(isChecked);
         }
         generalSettingsStatus.hidden = false;
         setTimeout(() => (generalSettingsStatus.hidden = true), 2000);
@@ -58,6 +60,30 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => (generalSettingsStatus.hidden = true), 2000);
     }
   });
+
+  // Função para aplicar a visibilidade na aba ativa
+  async function applyToActiveTab(shouldHide) {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab || !tab.id) return;
+
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        function: (elementId, hide) => {
+          const el = document.getElementById(elementId);
+          if (el) {
+            el.style.display = hide ? 'none' : '';
+            console.log(`Elemento ${elementId} ${hide ? 'ocultado' : 'mostrado'} na página ativa.`);
+          } else {
+            console.log(`Elemento ${elementId} não encontrado na página ativa.`);
+          }
+        },
+        args: [window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_ELEMENT_ID, shouldHide]
+      });
+    } catch (e) {
+      console.warn('Não foi possível aplicar na aba ativa:', e);
+    }
+  }
 
   // OpenRouter (placeholder - implementar se necessário)
   const saveOpenRouterConfigBtn = document.getElementById('saveOpenRouterConfig');
