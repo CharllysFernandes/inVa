@@ -36,7 +36,22 @@ const urlType = window.getUrlType(currentUrl);
  */
 function handleTicketCreate() {
     console.log('Página de criação de ticket detectada.');
-    if (typeof window.createCKEditor === 'function') window.createCKEditor();
+    try {
+        if (typeof window.createCKEditor === 'function') window.createCKEditor();
+    } catch (e) {
+        console.warn('Erro ao chamar createCKEditor:', e);
+    }
+
+    // Inicializa o módulo de artigos destacados da KB (compatível com MV3)
+    try {
+        if (typeof window.initKbFeaturedArticles === 'function') {
+            window.featured_kb_articles();
+        } else {
+            console.warn('featured_kb_articles não disponível.');
+        }
+    } catch (e) {
+        console.warn('Não foi possível inicializar kb-featured-articles:', e);
+    }
 }
 
 /**
