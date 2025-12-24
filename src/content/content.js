@@ -1,51 +1,89 @@
-// content script for the browser extension.
-// This script runs in the context of web pages to enhance user experience.
+/**
+ * Content script principal para a extensão.
+ * Executado no contexto da página para adicionar melhorias específicas por rota.
+ * Documentado com JSDoc para facilitar manutenção.
+ */
 
+
+/**
+ * Inicializa o content script.
+ * @returns {void}
+ */
 // function initialize content script
 function initializeContentScript() {
     console.log('Content script initialized.');
     // Add your content script logic here
 }
 
-// Run the initialization function
 initializeContentScript();
 
+// NOTE: avoid static `import` here to prevent SyntaxError when the content
+// script is not loaded as a module. We try dynamic import at runtime and
+// always fallback to `window.requestShowView` for maximum compatibility.
 
-// Captura a url da página atual e usa a função global getUrlType
+/**
+ * Determina o tipo de URL atual.
+ * @param {string} url - A URL a ser analisada.
+ * @returns {string} Tipo de URL identificado.
+ */
 const currentUrl = window.location.href;
 const urlType = window.getUrlType(currentUrl);
 
-
-
-
-if (urlType === 'TICKET_CREATE') {
+/**
+ * Handler para a rota de criação de ticket.
+ * Ativa o editor (CKEditor) quando disponível.
+ * @returns {void}
+ */
+function handleTicketCreate() {
     console.log('Página de criação de ticket detectada.');
-    // chame a função editor sync
-    window.createCKEditor();
-    // Lógica específica para criação de ticket
-} else if (urlType === 'TICKET_SHOW_VIEW') {
+    if (typeof window.createCKEditor === 'function') window.createCKEditor();
+}
+
+/**
+ * Handler para a rota de exibição de ticket.
+ * @returns {void}
+ */
+function handleTicketShowView() {
     console.log('Página de exibição de ticket detectada.');
-   
-} else if (urlType === 'REQUESTS_SHOW_ID') {
+}
+
+/**
+ * Handler para a rota de exibição de requisição (`REQUESTS_SHOW_ID`).
+ * Chama a API `requestShowView.whenArticleItemsAvailable` fornecendo o handler
+ * documentado em `requestShowView.handleArticleItems`.
+ * @returns {void}
+ */
+function handleRequestsShowId() {
     console.log('Página de requisição detectada.');
-    // Chamar API da feature apenas nesta rota.
+    const api = window.requestShowView;
+    const whenAvailable = api?.whenArticleItemsAvailable;
+    const handler = api?.handleArticleItems ?? (() => { });
+
+    if (typeof whenAvailable !== 'function') {
+        console.warn('requestShowView API não disponível.');
+        return;
+    }
+
     try {
-        if (typeof window.requestShowView === 'function') {
-            // compatibilidade com implementação antiga
-            window.requestShowView();
-        } else if (window.requestShowView && typeof window.requestShowView.whenArticleItemsAvailable === 'function') {
-            window.requestShowView.whenArticleItemsAvailable((items) => {
-                console.log('requestShowView: items recebidos:', items.length);
-                // Exemplo de uso: destacar ou processar items
-                // items.forEach(el => { /* ... */ });
-            }, { timeout: 10000 });
-        } else {
-            console.warn('requestShowView API não disponível.');
-        }
+        whenAvailable(handler, { timeout: 5000 }); // 5 segundos de timeout
     } catch (e) {
         console.error('Erro ao chamar requestShowView:', e);
     }
-    // Lógica específica para requisição
-} else {
-    console.log('Tipo de URL desconhecido.');
+}
+
+/** Roteia para o handler apropriado com base no tipo de URL.
+ */
+
+switch (urlType) {
+    case 'TICKET_CREATE':
+        handleTicketCreate();
+        break;
+    case 'TICKET_SHOW_VIEW':
+        handleTicketShowView();
+        break;
+    case 'REQUESTS_SHOW_ID':
+        handleRequestsShowId();
+        break;
+    default:
+        console.log('Tipo de URL desconhecido.');
 }
