@@ -21,3 +21,21 @@ window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_TIMEOUT = 300000; // 5 minutos em ms
 window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_STORAGE_KEY = 'switch_kb_featured_articles';
 window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_ELEMENT_ID = 'featured_kb_articles';
 
+// Constantes para tipos de URL
+window.INVA_CONSTANTS.URL_TYPES = {
+    TICKET_CREATE: 'TICKET_CREATE',
+    TICKET_SHOW_VIEW: 'TICKET_SHOW_VIEW',
+    REQUESTS_SHOW_ID: 'REQUESTS_SHOW_ID',
+    UNKNOWN: 'UNKNOWN'
+};
+
+// Identificadores de URL para cada tipo
+window.INVA_CONSTANTS.URL_IDENTIFIERS = {
+    [window.INVA_CONSTANTS.URL_TYPES.TICKET_CREATE]: '/incident/create',
+    [window.INVA_CONSTANTS.URL_TYPES.TICKET_SHOW_VIEW]: 'views/index/show/view_id/',
+    [window.INVA_CONSTANTS.URL_TYPES.REQUESTS_SHOW_ID]: 'requests/show/index/id'
+};
+
+// Timeout padrão para aguardar elementos no DOM (em milissegundos)
+window.INVA_CONSTANTS.DEFAULT_WAIT_FOR_ELEMENT_TIMEOUT = 10000;
+

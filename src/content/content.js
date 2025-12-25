@@ -12,7 +12,20 @@
 // function initialize content script
 function initializeContentScript() {
     console.log('Content script initialized.');
-    // Add your content script logic here
+
+    // Adiciona listener para mensagens do popup
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        if (request.action === 'toggleKnowledgeBase') {
+            const elementId = window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_ELEMENT_ID;
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.style.display = request.hide ? 'none' : '';
+                console.log(`Elemento ${elementId} ${request.hide ? 'ocultado' : 'mostrado'} na página ativa.`);
+            } else {
+                console.log(`Elemento ${elementId} não encontrado na página ativa.`);
+            }
+        }
+    });
 }
 
 initializeContentScript();

@@ -1,17 +1,28 @@
-/**
- * Utilitários para manipulação de DOM.
- * Compatível com extensões MV3.
- */
+
+// Importa a constante de timeout padrão de constant.js
+const DEFAULT_WAIT_FOR_ELEMENT_TIMEOUT = window.INVA_CONSTANTS.DEFAULT_WAIT_FOR_ELEMENT_TIMEOUT;
 
 /**
  * Aguarda um elemento aparecer no DOM usando MutationObserver.
+ * 
  * @param {string} selector - Seletor CSS do elemento (ex.: '#id', '.class').
- * @param {number} [timeout=10000] - Timeout em ms para parar a espera.
+ * @param {number} [timeout=DEFAULT_WAIT_FOR_ELEMENT_TIMEOUT] - Timeout em ms para parar a espera.
  * @returns {Promise<boolean>} - Resolve com true se o elemento foi encontrado, false se timeout.
+ * 
+ * @example
+ * // Aguarda um elemento com ID 'myElement' aparecer no DOM
+ * window.waitForElement('#myElement')
+ *   .then((found) => {
+ *     if (found) {
+ *       console.log('Elemento encontrado!');
+ *     } else {
+ *       console.log('Timeout: elemento não encontrado.');
+ *     }
+ *   });
  */
-window.waitForElement = function (selector, timeout = 10000) {
+window.waitForElement = function (selector, timeout = DEFAULT_WAIT_FOR_ELEMENT_TIMEOUT) {
     return new Promise((resolve) => {
-        // Verifica se já existe
+        // Verifica se o elemento já existe no DOM
         if (document.querySelector(selector)) {
             resolve(true);
             return;
@@ -26,12 +37,13 @@ window.waitForElement = function (selector, timeout = 10000) {
             }
         });
 
+        // Configura o MutationObserver para observar mudanças no DOM
         observer.observe(document.documentElement || document.body, {
             childList: true,
             subtree: true
         });
 
-        // Safety timeout
+        // Configura um timeout para evitar espera infinita
         timeoutId = setTimeout(() => {
             observer.disconnect();
             resolve(false);

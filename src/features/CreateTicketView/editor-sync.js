@@ -1,10 +1,17 @@
-// Restaura o valor salvo no body do CKEditor assim que estiver disponível
-// Utiliza constantes globais para IDs e storage
-const CATEGORY_STEP1_ID = window.CATEGORY_STEP1_ID || 'category_step1';
-const REQUEST_DESCRIPTION_ID = window.REQUEST_DESCRIPTION_ID || 'request_description';
-const REQUEST_DESCRIPTION_STORAGE_KEY = window.REQUEST_DESCRIPTION_STORAGE_KEY || 'request_description_text';
+// Importa constantes globais de constant.js
+const CATEGORY_STEP1_ID = window.INVA_CONSTANTS.CATEGORY_STEP1_ID;
+const REQUEST_DESCRIPTION_ID = window.INVA_CONSTANTS.REQUEST_DESCRIPTION_ID;
+const REQUEST_DESCRIPTION_STORAGE_KEY = window.INVA_CONSTANTS.REQUEST_DESCRIPTION_STORAGE_KEY;
 
+/**
+ * Restaura o valor salvo no body do CKEditor assim que estiver disponível.
+ * Utiliza MutationObserver e intervalos para garantir que o elemento esteja pronto.
+ */
 function restoreCKEditorDescription() {
+    /**
+     * Insere a descrição no CKEditor.
+     * @returns {boolean} - Retorna true se a inserção foi bem-sucedida, false caso contrário.
+     */
     function insertDescriptionInCKEditor() {
         const value = localStorage.getItem(REQUEST_DESCRIPTION_STORAGE_KEY) || '';
         const textareaId = 'form_create_description';
@@ -12,9 +19,6 @@ function restoreCKEditorDescription() {
         if (!textarea) return false;
 
         // Usar somente o fallback: inserir diretamente no iframe correspondente
-        // (removida a tentativa de usar CKEDITOR API conforme solicitado)
-
-        // Fallback: inserir diretamente no iframe correspondente
         const iframe = document.querySelector(`#cke_${textareaId} iframe.cke_wysiwyg_frame`);
         if (iframe) {
             try {
@@ -29,6 +33,10 @@ function restoreCKEditorDescription() {
                 if (value) p.innerHTML = value;
                 textarea.value = value || '';
                 console.log('[CKEditor][iframe] Valor restaurado:', value);
+
+                // Limpa o valor do localStorage após inserção bem-sucedida
+                localStorage.removeItem(REQUEST_DESCRIPTION_STORAGE_KEY);
+                console.log('[CKEditor][iframe] Valor do localStorage removido.');
                 return true;
             } catch (e) {
                 console.warn('Erro ao acessar iframe do CKEditor:', e);
@@ -69,6 +77,9 @@ function restoreCKEditorDescription() {
 // Auto-run restore
 try { restoreCKEditorDescription(); } catch (e) { console.warn('restoreCKEditorDescription failed', e); }
 
+/**
+ * Cria o editor CKEditor e adiciona um listener para salvar a descrição no localStorage.
+ */
 function createCKEditor() {
     console.log(`Criando editor CKEditor...`);
     const container = document.getElementById(CATEGORY_STEP1_ID);

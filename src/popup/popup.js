@@ -34,6 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Adiciona listener para atualizar o estado do checkbox
+  hideKnowledgeBaseCheckbox.addEventListener('change', async () => {
+    const isChecked = hideKnowledgeBaseCheckbox.checked;
+    console.log('Checkbox alterado:', isChecked);
+  });
+
   saveGeneralSettingsBtn.addEventListener('click', async () => {
     const isChecked = hideKnowledgeBaseCheckbox.checked;
     try {
@@ -67,18 +73,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab || !tab.id) return;
 
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        function: (elementId, hide) => {
-          const el = document.getElementById(elementId);
-          if (el) {
-            el.style.display = hide ? 'none' : '';
-            console.log(`Elemento ${elementId} ${hide ? 'ocultado' : 'mostrado'} na página ativa.`);
-          } else {
-            console.log(`Elemento ${elementId} não encontrado na página ativa.`);
-          }
-        },
-        args: [window.INVA_CONSTANTS.KB_FEATURED_ARTICLES_ELEMENT_ID, shouldHide]
+      // Verifica se a URL da aba ativa termina com 'incident/create'
+      const isIncidentCreatePage = tab.url && tab.url.endsWith('incident/create');
+
+      // Envia uma mensagem para o content script
+      chrome.tabs.sendMessage(tab.id, {
+        action: 'toggleKnowledgeBase',
+        hide: shouldHide
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn('Não foi possível enviar mensagem para o content script:', chrome.runtime.lastError);
+        } else {
+          console.log('Mensagem enviada para o content script com sucesso.');
+        }
       });
     } catch (e) {
       console.warn('Não foi possível aplicar na aba ativa:', e);
