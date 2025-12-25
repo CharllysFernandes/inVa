@@ -7,13 +7,15 @@
     content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none';" />
   <title>inVa</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Extensão inVa para melhorar a experiência de criação de chamados." />
   <link rel="stylesheet" href="popup.css" />
 </head>
 
 <body>
-  <main class="popup-layout">
-    <header class="app-header">
-      <img src="../../assets/icons/android-chrome-512x512.png" alt="Logotipo da inVa" class="app-logo" width="40" height="40" />
+  <main class="popup-layout" role="main">
+    <header class="app-header" role="banner">
+      <img src="../../assets/icons/android-chrome-512x512.png" alt="Logotipo da inVa" class="app-logo" width="40"
+        height="40" loading="lazy" />
       <div class="app-meta">
         <h1 class="app-title">inVa</h1>
         <p id="appVersion" class="app-version" aria-live="polite">&nbsp;</p>
@@ -25,12 +27,18 @@
         <h2 id="openrouter-section-title" class="card-title">API do OpenRouter</h2>
         <p class="card-subtitle">Configure suas credenciais para integração com OpenRouter.</p>
       </div>
-      <label class="input-label" for="openrouterApiKey">API Key</label>
-      <input id="openrouterApiKey" class="text-input" type="password" placeholder="sk-or-v1-..." autocomplete="off" />
-      
+      <div class="input-group">
+        <label class="input-label" for="openrouterApiKey">API Key</label>
+        <input id="openrouterApiKey" class="text-input" type="password" placeholder="sk-or-v1-..." autocomplete="off"
+          aria-describedby="openrouterApiKeyHelp" />
+        <p id="openrouterApiKeyHelp" class="input-help">Insira sua chave de API do OpenRouter.</p>
+      </div>
+
       <div class="actions">
-        <button id="saveOpenRouterConfig" type="button" class="primary">Salvar Configuração</button>
-        <button id="testOpenRouterConnection" type="button" class="secondary">Testar Conexão</button>
+        <button id="saveOpenRouterConfig" type="button" class="primary" aria-label="Salvar configuração da API">Salvar
+          Configuração</button>
+        <button id="testOpenRouterConnection" type="button" class="secondary"
+          aria-label="Testar conexão com a API">Testar Conexão</button>
         <p id="openrouterStatus" class="status-message" aria-live="polite" hidden>Salvo!</p>
       </div>
     </section>
@@ -40,12 +48,15 @@
         <h2 id="general-settings-section-title" class="card-title">Configurações Gerais</h2>
         <p class="card-subtitle">Personalize o comportamento da extensão.</p>
       </div>
-      <label class="toggle" for="hideKnowledgeBase">
-        <input id="hideKnowledgeBase" type="checkbox" />
-        <span>Esconder base de conhecimento do topo da descrição do chamado</span>
-      </label>
+      <div class="toggle-group">
+        <label class="toggle" for="hideKnowledgeBase">
+          <input id="hideKnowledgeBase" type="checkbox" role="switch" />
+          <span>Esconder base de conhecimento do topo da descrição do chamado</span>
+        </label>
+      </div>
       <div class="actions">
-        <button id="saveGeneralSettings" type="button" class="primary">Salvar Configurações</button>
+        <button id="saveGeneralSettings" type="button" class="primary" aria-label="Salvar configurações gerais">Salvar
+          Configurações</button>
         <p id="generalSettingsStatus" class="status-message" aria-live="polite" hidden>Salvo!</p>
       </div>
     </section>
@@ -55,15 +66,19 @@
         <h2 id="diagnostics-section-title" class="card-title">Diagnóstico</h2>
         <p class="card-subtitle">Use o modo debug para investigar comportamentos e acessar os últimos registros.</p>
       </div>
-      <label class="toggle" for="debugEnabled">
-        <input id="debugEnabled" type="checkbox" />
-        <span>Modo debug</span>
-      </label>
-      <div class="actions">
-        <button id="viewLogs" type="button" class="secondary">Ver logs</button>
-        <button id="clearLogs" type="button" class="secondary">Limpar logs</button>
+      <div class="toggle-group">
+        <label class="toggle" for="debugEnabled">
+          <input id="debugEnabled" type="checkbox" role="switch" />
+          <span>Modo debug</span>
+        </label>
       </div>
-      <pre id="logsOutput" class="log-output" hidden></pre>
+      <div class="actions">
+        <button id="viewLogs" type="button" class="secondary" aria-label="Ver logs">Ver logs</button>
+        <button id="clearLogs" type="button" class="secondary" aria-label="Limpar logs">Limpar logs</button>
+      </div>
+      <div class="log-container">
+        <pre id="logsOutput" class="log-output" hidden aria-label="Saída de logs"></pre>
+      </div>
     </section>
   </main>
   <script type="module" src="../shared/constant.js"></script>
